@@ -1,0 +1,34 @@
+{
+  "name": "activenode",
+  "version": "0.0.0",
+  "description": "ActiveNode is a microblogging software.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js & parcel watch ./client/index.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akihikodaki/activenode.git"
+  },
+  "author": "Akihiko Odaki <nekomanma@pixiv.co.jp>",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/akihikodaki/activenode/issues"
+  },
+  "homepage": "https://github.com/akihikodaki/activenode#readme",
+  "dependencies": {
+    "db-migrate": "^0.10.7",
+    "db-migrate-pg": "^0.4.0",
+    "express": "^4.16.3",
+    "oauth2orize": "^1.11.0"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.7.0",
+    "react": "^16.3.1",
+    "react-dom": "^16.3.1",
+    "react-redux": "^5.0.7",
+    "redux": "^3.7.2",
+    "redux-thunk": "^2.2.0"
+  }
+}
