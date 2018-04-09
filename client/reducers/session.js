@@ -14,4 +14,11 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-export default () => null;
+export default (state = { created: false }, action) => {
+  switch (action.type) {
+  case 'SESSION_CREATION':
+    return { created: true };
+  default:
+    return state;
+  }
+};

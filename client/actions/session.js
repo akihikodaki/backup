@@ -21,7 +21,13 @@ export function signin(username, password) {
     'POST',
     '/oauth/token',
     new URLSearchParams({ grant_type: 'password', username, password })
-  )).then(result => {
-    console.log(result);
-  });
+  )).then(() => dispatch({ type: 'SESSION_CREATION' }));
+}
+
+export function signup(username, password) {
+  return dispatch => dispatch(request(
+    'POST',
+    '/api/v0/signup',
+    new URLSearchParams({ username, password })
+  )).then(() => dispatch({ type: 'SESSION_CREATION' }));
 }

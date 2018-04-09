@@ -17,19 +17,11 @@
 const pool = require('./pool');
 
 module.exports = {
-  insert(user) {
+  insert(token) {
     return pool.query({
-      name: 'users.insert',
-      text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
-      values: [user.salt, user.username, user.password]
-    }).then(({ rows }) => user.id = rows[0].id);
-  },
-
-  selectByUsername(username) {
-    return pool.query({
-      name: 'users.selectByUsername',
-      text: 'SELECT * FROM users WHERE username=$1',
-      values: [username]
-    }).then(({ rows }) => rows[0]);
+      name: 'refresh_tokens.insert',
+      text: 'INSERT INTO refresh_tokens (user_id, secret, digest) VALUES ($1, $2, $3) RETURNING id',
+      values: [token.user.id, token.secret, token.digest]
+    }).then(({ rows }) => token.id = rows[0].id);
   }
 };

@@ -17,12 +17,14 @@
 const express = require('express');
 const createApi = require('./api');
 const createOauth = require('./oauth');
+const createUser = require('./user');
 
 module.exports = () => {
   const application = express();
 
   application.use('/api', createApi());
   application.use('/oauth', createOauth());
+  application.use(createUser());
   application.use(express.static('dist'));
 
   return application;

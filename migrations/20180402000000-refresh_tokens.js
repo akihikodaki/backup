@@ -14,22 +14,19 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-const pool = require('./pool');
-
-module.exports = {
-  insert(user) {
-    return pool.query({
-      name: 'users.insert',
-      text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
-      values: [user.salt, user.username, user.password]
-    }).then(({ rows }) => user.id = rows[0].id);
+exports.up = (db, callback) => db.createTable('refresh_tokens', {
+  user_id: {
+    type: 'int',
+    notNull: true,
+    foreignKey: {
+      table: 'users',
+      rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
+      mapping: 'id',
+    }
   },
+  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
+  secret: { type: 'bytea', notNull: true },
+  digest: { type: 'bytea', notNull: true, unique: true }
+}, callback);
 
-  selectByUsername(username) {
-    return pool.query({
-      name: 'users.selectByUsername',
-      text: 'SELECT * FROM users WHERE username=$1',
-      values: [username]
-    }).then(({ rows }) => rows[0]);
-  }
-};
+exports._meta = { version: 1 };

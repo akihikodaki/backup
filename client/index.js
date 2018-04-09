@@ -16,42 +16,11 @@
 
 import React from 'react';
 import { render } from 'react-dom';
-import { Provider, connect } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
 import thunk from 'redux-thunk';
-import { signin } from './actions/session';
+import Root from './components';
 import reducers from './reducers';
 
 const store = createStore(reducers, applyMiddleware(thunk));
 
-const Home = connect()(class extends React.PureComponent {
-  componentWillMount() {
-    this.handleSubmit = event => {
-      event.preventDefault();
-      this.props.dispatch(signin(
-        event.target.elements.username.value,
-        event.target.elements.password.value
-      ));
-    };
-  }
-
-  render() {
-    return (
-      <form onSubmit={this.handleSubmit}>
-        <input name='username' placeholder='Username' type='text'></input>
-        <input name='password' placeholder='Password' type='password'></input>
-        <button>Sign in</button>
-      </form>
-    );
-  }
-});
-
-class Root extends React.PureComponent {
-  render() {
-    return (
-      <Provider store={store}><Home /></Provider>
-    );
-  }
-}
-
-render(<Root />, document.getElementById('root'));
+render(<Root store={store} />, document.getElementById('root'));
