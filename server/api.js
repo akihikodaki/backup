@@ -14,11 +14,21 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('users', {
-  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  salt: { type: 'bytea', notNull: true },
-  username: { type: 'string', notNull: true, unique: true },
-  password: { type: 'bytea', notNull: true },
-}, callback);
+const express = require('express');
+const User = require('./entities/user');
+const users = require('./repositories/users');
 
-exports._meta = { version: 1 };
+module.exports = () => {
+  const application = express();
+
+  application.post('/v0/signup', express.urlencoded({ extended: false }), ({ body }, response) => {
+    User.create(body.username, body.password).then(users.insert).then(() => {
+      response.status(202).end();
+    }, error => {
+      console.error(error);
+      response.sendStatus(500);
+    });
+  });
+
+  return application;
+};

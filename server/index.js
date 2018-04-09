@@ -14,11 +14,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('users', {
-  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  salt: { type: 'bytea', notNull: true },
-  username: { type: 'string', notNull: true, unique: true },
-  password: { type: 'bytea', notNull: true },
-}, callback);
+const express = require('express');
+const createApi = require('./api');
+const createOauth = require('./oauth');
 
-exports._meta = { version: 1 };
+module.exports = () => {
+  const application = express();
+
+  application.use('/api', createApi());
+  application.use('/oauth', createOauth());
+  application.use(express.static('dist'));
+
+  return application;
+};

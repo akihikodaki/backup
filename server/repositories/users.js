@@ -14,11 +14,14 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('users', {
-  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  salt: { type: 'bytea', notNull: true },
-  username: { type: 'string', notNull: true, unique: true },
-  password: { type: 'bytea', notNull: true },
-}, callback);
+const pool = require('./pool');
 
-exports._meta = { version: 1 };
+module.exports = {
+  insert(user) {
+    return pool.query({
+      name: 'users.insert',
+      text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
+      values: [user.salt, user.username, user.password]
+    }).then(({ rows }) => user.id = rows[0].id);
+  }
+};

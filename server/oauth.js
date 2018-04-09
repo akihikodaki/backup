@@ -14,11 +14,24 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('users', {
-  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  salt: { type: 'bytea', notNull: true },
-  username: { type: 'string', notNull: true, unique: true },
-  password: { type: 'bytea', notNull: true },
-}, callback);
+const express = require('express');
+const oauth2orize = require('oauth2orize');
 
-exports._meta = { version: 1 };
+const oauth2Server = oauth2orize.createServer();
+
+oauth2Server.exchange(oauth2orize.exchange.password((client, username, password, scope, done) => {
+  if (username === 'admin' && password === 'password') {
+    done(false, 'accessToken', 'refreshToken');
+  }
+}));
+
+module.exports = () => {
+  const application = express();
+
+  application.post('/token',
+    express.urlencoded({ extended: false }),
+    oauth2Server.token(),
+    oauth2Server.errorHandler());
+
+  return application;
+};

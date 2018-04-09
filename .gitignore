@@ -13,7 +13,5 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 .cache
-config*
-database.json
 dist
 node_modules

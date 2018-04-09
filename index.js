@@ -14,23 +14,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-const { listenTo } = require('./config');
-const express = require('express');
-const oauth2orize = require('oauth2orize');
-const application = express();
-const oauth2Server = oauth2orize.createServer();
+const createServer = require('./server');
 
-oauth2Server.exchange(oauth2orize.exchange.password((client, username, password, scope, done) => {
-  if (username === 'admin' && password === 'password') {
-    done(false, 'accessToken', 'refreshToken');
-  }
-}));
-
-application.post('/oauth/token',
-  express.urlencoded({ extended: false }),
-  oauth2Server.token(),
-  oauth2Server.errorHandler());
-
-application.use(express.static('dist'));
-
-application.listen(listenTo).on('error', console.error);
+createServer().listen(process.env.LISTENTO).on('error', console.error);
