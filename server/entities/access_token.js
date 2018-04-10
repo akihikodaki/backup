@@ -14,15 +14,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+const base64url = require('base64url');
 const Token = require('./token');
 
 module.exports = class extends Token {
   getToken(clientSecret) {
-    return Buffer.concat([this.digest, clientSecret]).toString('base64');
+    return base64url(Buffer.concat([this.digest, clientSecret]));
   }
 
   static getDigestAndClientSecret() {
-    const buffer = Buffer.from(tokenString, 'base64');
+    const buffer = base64url.toBuffer(tokenString);
 
     return {
       digest: buffer.slice(0, 48),

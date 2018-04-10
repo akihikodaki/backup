@@ -30,8 +30,9 @@ function digest(secret, data) {
 }
 
 module.exports = class {
-  constructor({ user, secret, digest }) {
+  constructor({ user, userId, secret, digest }) {
     this.user = user;
+    this.userId = userId;
     this.secret = secret;
     this.digest = digest;
   }
@@ -41,6 +42,11 @@ module.exports = class {
   }
 
   static create(user, secret, clientSecret) {
-    return new this({ user, secret, digest: digest(secret, clientSecret) });
+    return new this({
+      user,
+      userId: user.id,
+      secret,
+      digest: digest(secret, clientSecret)
+    });
   }
 };

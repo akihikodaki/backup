@@ -14,6 +14,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+const base64url = require('base64url');
 const Token = require('./token');
 
 module.exports = class extends Token {
@@ -28,11 +29,11 @@ module.exports = class extends Token {
     buffer.writeInt32BE(this.id, 0);
     clientSecret.copy(buffer, 4);
 
-    return buffer.toString('base64');
+    return base64url(buffer);
   }
 
   static getIdAndClientSecret(tokenString) {
-    const buffer = Buffer.from(tokenString, 'base64');
+    const buffer = base64url.toBuffer(tokenString);
 
     return {
       id: buffer.readInt32BE(0),

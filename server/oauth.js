@@ -17,9 +17,12 @@
 const { randomBytes } = require('crypto');
 const express = require('express');
 const oauth2orize = require('oauth2orize');
+const { promisify } = require('util');
 const AccessToken = require('./entities/access_token');
 const RefreshToken = require('./entities/refresh_token');
 const User = require('./entities/user');
+
+const promisifiedRandomBytes = promisify(randomBytes);
 
 module.exports = ({ accessTokens, refreshTokens, users }) => {
   const application = express();
@@ -35,16 +38,7 @@ module.exports = ({ accessTokens, refreshTokens, users }) => {
         return;
       }
 
-      const buffer = await new Promise((resolve, reject) => {
-        randomBytes(512, (error, buffer) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(buffer);
-          }
-        });
-      });
-
+      const buffer = await promisifiedRandomBytes(512);
       const accessTokenServerSecret = buffer.slice(0, 128);
       const accessTokenClientSecret = buffer.slice(128, 256);
       const refreshTokenServerSecret = buffer.slice(256, 384);
@@ -70,6 +64,37 @@ module.exports = ({ accessTokens, refreshTokens, users }) => {
         accessToken.getToken(accessTokenClientSecret),
         refreshToken.getToken(refreshTokenClientSecret));
     } catch (error) {
+      done(error);
+    }
+  }));
+
+  oauth2Server.exchange(oauth2orize.exchange.refreshToken(async (client, tokenString, scope, done) => {
+    try {
+      const { id, clientSecret } = RefreshToken.getIdAndClientSecret(tokenString);
+      const asyncBuffer = promisifiedRandomBytes(512);
+      const refreshToken = new RefreshToken(await refreshTokens.selectById(id));
+
+      if (!refreshToken.authenticate(clientSecret)) {
+        done();
+        return;
+      }
+
+      const user = await users.selectByRefreshToken(refreshToken);
+      const buffer = await asyncBuffer;
+
+      const accessTokenServerSecret = buffer.slice(0, 128);
+      const accessTokenClientSecret = buffer.slice(128, 256);
+
+      const accessToken = AccessToken.create(
+        user,
+        accessTokenServerSecret,
+        accessTokenClientSecret);
+
+      await accessTokens.insert(accessToken);
+
+      done(null, accessToken.getToken(accessTokenClientSecret));
+    } catch (error) {
+      console.dir(error);
       done(error);
     }
   }));

@@ -16,20 +16,30 @@
 
 module.exports = function() {
   this.users = {
-    insert: user => {
-      return this.pg.query({
-        name: 'users.insert',
-        text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
-        values: [user.salt, user.username, user.password]
-      }).then(({ rows }) => user.id = rows[0].id);
+    insert: user => this.pg.query({
+      name: 'users.insert',
+      text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
+      values: [user.salt, user.username, user.password]
+    }).then(({ rows }) => user.id = rows[0].id),
+
+    selectByRefreshToken: async token => {
+      if (token.user) {
+        return token.user;
+      }
+
+      const { rows } = await this.pg.query({
+        name: 'users.selectByRefreshToken',
+        text: 'SELECT * FROM users WHERE id = $1',
+        values: [token.userId],
+      });
+
+      return rows[0];
     },
 
-    selectByUsername: username => {
-      return this.pg.query({
-        name: 'users.selectByUsername',
-        text: 'SELECT * FROM users WHERE username=$1',
-        values: [username]
-      }).then(({ rows }) => rows[0]);
-    }
+    selectByUsername: username => this.pg.query({
+      name: 'users.selectByUsername',
+      text: 'SELECT * FROM users WHERE username = $1',
+      values: [username]
+    }).then(({ rows }) => rows[0])
   };
 };
