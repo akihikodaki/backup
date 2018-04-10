@@ -15,34 +15,29 @@
 */
 
 const { pbkdf2, randomBytes, timingSafeEqual } = require('crypto');
+const { promisify } = require('util');
+
+const promisifiedPbkdf2 = promisify(pbkdf2);
+const promisifiedRandomBytes = promisify(randomBytes);
 
 function hashPassword(rawPassword, salt) {
-  return new Promise((resolve, reject) => {
-    /*
-       NIST Special Publication 800-63B
-       Digital Identity Guidelines
-       Authentication and Lifecycle Management
-       5. Authenticator and Verifier Requirements
-       https://pages.nist.gov/800-63-3/sp800-63b.html#sec5
-       > Secrets SHALL be hashed with a salt value using an approved
-       > hash function such as PBKDF2 as described in [SP 800-132].
-       > At least 10,000 iterations of the hash function SHOULD be
-       > performed.
+  /*
+     NIST Special Publication 800-63B
+     Digital Identity Guidelines
+     Authentication and Lifecycle Management
+     5. Authenticator and Verifier Requirements
+     https://pages.nist.gov/800-63-3/sp800-63b.html#sec5
+     > Secrets SHALL be hashed with a salt value using an approved
+     > hash function such as PBKDF2 as described in [SP 800-132].
+     > At least 10,000 iterations of the hash function SHOULD be
+     > performed.
 
-       Choose SHA-384 because it could be relatively fast even for
-       generic computers with Intel CPU thanks to SHA extensions.
-       Intel® SHA Extensions | Intel® Software
-       https://software.intel.com/en-us/articles/intel-sha-extensions
-    */
-    pbkdf2(rawPassword, salt, 16384, 128, 'sha384', (error, hashedPassword) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-
-      resolve(hashedPassword);
-    });
-  });
+     Choose SHA-384 because it could be relatively fast even for
+     generic computers with Intel CPU thanks to SHA extensions.
+     Intel® SHA Extensions | Intel® Software
+     https://software.intel.com/en-us/articles/intel-sha-extensions
+  */
+  return promisifiedPbkdf2(rawPassword, salt, 16384, 128, 'sha384');
 }
 
 module.exports = class {
@@ -54,19 +49,12 @@ module.exports = class {
   }
 
   async authenticate(rawPassword) {
-    return timingSafeEqual(this.password, await hashPassword(rawPassword, this.salt));
+    const hashedPassword = await hashPassword(rawPassword, this.salt);
+    return timingSafeEqual(this.password, hashedPassword);
   }
 
   static async create(username, rawPassword) {
-    const salt = await new Promise((resolve, reject) => randomBytes(128, (error, salt) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-
-        resolve(salt);
-    }));
-
+    const salt = await promisifiedRandomBytes(128);
     const password = await hashPassword(rawPassword, salt);
 
     return new this({ salt, username, password });

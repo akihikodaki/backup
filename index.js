@@ -16,4 +16,4 @@
 
 const createServer = require('./server');
 
-createServer().listen(process.env.LISTENTO).on('error', console.error);
+createServer(process.env.REDIS).listen(process.env.LISTENTO).on('error', console.error);

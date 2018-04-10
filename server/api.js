@@ -16,9 +16,8 @@
 
 const express = require('express');
 const User = require('./entities/user');
-const users = require('./repositories/users');
 
-module.exports = () => {
+module.exports = ({ users }) => {
   const application = express();
 
   application.post('/v0/signup', express.urlencoded({ extended: false }), ({ body }, response) => {

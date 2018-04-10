@@ -14,14 +14,19 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-module.exports = function() {
-  this.refreshTokens = {
-    insert: token => {
-      return this.pg.query({
-        name: 'refresh_tokens.insert',
-        text: 'INSERT INTO refresh_tokens (user_id, secret, digest) VALUES ($1, $2, $3) RETURNING id',
-        values: [token.user.id, token.secret, token.digest]
-      }).then(({ rows }) => token.id = rows[0].id);
-    }
-  };
-};
+const Token = require('./token');
+
+module.exports = class extends Token {
+  getToken(clientSecret) {
+    return Buffer.concat([this.digest, clientSecret]).toString('base64');
+  }
+
+  static getDigestAndClientSecret() {
+    const buffer = Buffer.from(tokenString, 'base64');
+
+    return {
+      digest: buffer.slice(0, 48),
+      clientSecret: buffer.slice(48)
+    };
+  }
+}

@@ -14,46 +14,29 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-const { createHmac, timingSafeEqual } = require('crypto');
+const Token = require('./token');
 
-function digest(secret, data) {
-  /*
-     Choose SHA-384 because it could be relatively fast even for
-     generic computers with Intel CPU thanks to SHA extensions.
-     Intel® SHA Extensions | Intel® Software
-     https://software.intel.com/en-us/articles/intel-sha-extensions
-  */
-  const hmac = createHmac('sha384', data);
-  hmac.update(secret);
-
-  return hmac.digest();
-}
-
-module.exports = class {
-  constructor({ id, user, secret, digest }) {
-    this.user = user;
-    this.secret = secret;
-    this.digest = digest;
-  }
-
-  authenticate(clientSecret) {
-    return timingSafeEqual(digest(this.secret, clientSecret), this.digest);
+module.exports = class extends Token {
+  constructor(attributes) {
+    super(attributes);
+    this.id = attributes.id;
   }
 
   getToken(clientSecret) {
-    return Buffer.concat([this.digest, clientSecret]).toString('base64');
+    const buffer = Buffer.allocUnsafe(clientSecret.byteLength + 4);
+
+    buffer.writeInt32BE(this.id, 0);
+    clientSecret.copy(buffer, 4);
+
+    return buffer.toString('base64');
   }
 
-  static create(user, secret, clientSecret) {
-    return new this({ user, secret, digest: digest(secret, clientSecret) });
-  }
-
-  static getDigestAndClientSecret(tokenString) {
+  static getIdAndClientSecret(tokenString) {
     const buffer = Buffer.from(tokenString, 'base64');
 
     return {
-      digest: buffer.slice(0, 48),
-      clientSecret: buffer.slice(48)
+      id: buffer.readInt32BE(0),
+      clientSecret: buffer.slice(4)
     };
   }
 };

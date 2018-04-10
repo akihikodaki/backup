@@ -14,22 +14,22 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-const pool = require('./pool');
+module.exports = function() {
+  this.users = {
+    insert: user => {
+      return this.pg.query({
+        name: 'users.insert',
+        text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
+        values: [user.salt, user.username, user.password]
+      }).then(({ rows }) => user.id = rows[0].id);
+    },
 
-module.exports = {
-  insert(user) {
-    return pool.query({
-      name: 'users.insert',
-      text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
-      values: [user.salt, user.username, user.password]
-    }).then(({ rows }) => user.id = rows[0].id);
-  },
-
-  selectByUsername(username) {
-    return pool.query({
-      name: 'users.selectByUsername',
-      text: 'SELECT * FROM users WHERE username=$1',
-      values: [username]
-    }).then(({ rows }) => rows[0]);
-  }
+    selectByUsername: username => {
+      return this.pg.query({
+        name: 'users.selectByUsername',
+        text: 'SELECT * FROM users WHERE username=$1',
+        values: [username]
+      }).then(({ rows }) => rows[0]);
+    }
+  };
 };

@@ -17,13 +17,15 @@
 const express = require('express');
 const createApi = require('./api');
 const createOauth = require('./oauth');
+const Repositories = require('./repositories');
 const createUser = require('./user');
 
-module.exports = () => {
+module.exports = redis => {
   const application = express();
+  const repositories = new Repositories(redis);
 
-  application.use('/api', createApi());
-  application.use('/oauth', createOauth());
+  application.use('/api', createApi(repositories));
+  application.use('/oauth', createOauth(repositories));
   application.use(createUser());
   application.use(express.static('dist'));
 

@@ -14,6 +14,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-const { Pool } = require('pg');
+const createAccessTokens = require('./access_tokens');
+const createPg = require('./pg');
+const createRedis = require('./redis');
+const createRefreshTokens = require('./refresh_tokens');
+const createUsers = require('./users');
 
-module.exports = new Pool;
+module.exports = function(redis) {
+  createAccessTokens.call(this);
+  createPg.call(this);
+  createRedis.call(this, redis);
+  createRefreshTokens.call(this);
+  createUsers.call(this);
+};

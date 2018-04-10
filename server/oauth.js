@@ -17,50 +17,62 @@
 const { randomBytes } = require('crypto');
 const express = require('express');
 const oauth2orize = require('oauth2orize');
+const AccessToken = require('./entities/access_token');
 const RefreshToken = require('./entities/refresh_token');
 const User = require('./entities/user');
-const refreshTokens = require('./repositories/refresh_tokens');
-const users = require('./repositories/users');
 
-const oauth2Server = oauth2orize.createServer();
-
-oauth2Server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, done) => {
-  try {
-    const attributes = await users.selectByUsername(username);
-    const user = new User(attributes);
-
-    if (!await user.authenticate(password)) {
-      done();
-      return;
-    }
-
-    const refreshTokenBuffer = await new Promise((resolve, reject) => {
-      randomBytes(256, (error, buffer) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(buffer);
-        }
-      });
-    });
-
-    const refreshTokenServerSecret = refreshTokenBuffer.slice(0, 128);
-    const refreshTokenClientSecret = refreshTokenBuffer.slice(128, 256);
-    const refreshToken = RefreshToken.create(
-      user,
-      refreshTokenServerSecret,
-      refreshTokenClientSecret);
-
-    await refreshTokens.insert(refreshToken);
-
-    done(null, 'accessToken', refreshToken.getToken(refreshTokenClientSecret));
-  } catch (error) {
-    done(error);
-  }
-}));
-
-module.exports = () => {
+module.exports = ({ accessTokens, refreshTokens, users }) => {
   const application = express();
+  const oauth2Server = oauth2orize.createServer();
+
+  oauth2Server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, done) => {
+    try {
+      const attributes = await users.selectByUsername(username);
+      const user = new User(attributes);
+
+      if (!await user.authenticate(password)) {
+        done();
+        return;
+      }
+
+      const buffer = await new Promise((resolve, reject) => {
+        randomBytes(512, (error, buffer) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(buffer);
+          }
+        });
+      });
+
+      const accessTokenServerSecret = buffer.slice(0, 128);
+      const accessTokenClientSecret = buffer.slice(128, 256);
+      const refreshTokenServerSecret = buffer.slice(256, 384);
+      const refreshTokenClientSecret = buffer.slice(384, 512);
+
+      const accessToken = AccessToken.create(
+        user,
+        accessTokenServerSecret,
+        accessTokenClientSecret);
+
+      const refreshToken = RefreshToken.create(
+        user,
+        refreshTokenServerSecret,
+        refreshTokenClientSecret);
+
+      await Promise.all([
+        accessTokens.insert(accessToken),
+        refreshTokens.insert(refreshToken)
+      ]);
+
+      done(
+        null,
+        accessToken.getToken(accessTokenClientSecret),
+        refreshToken.getToken(refreshTokenClientSecret));
+    } catch (error) {
+      done(error);
+    }
+  }));
 
   application.post('/token',
     express.urlencoded({ extended: false }),

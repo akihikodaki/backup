@@ -14,14 +14,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+const { Pool } = require('pg');
+
 module.exports = function() {
-  this.refreshTokens = {
-    insert: token => {
-      return this.pg.query({
-        name: 'refresh_tokens.insert',
-        text: 'INSERT INTO refresh_tokens (user_id, secret, digest) VALUES ($1, $2, $3) RETURNING id',
-        values: [token.user.id, token.secret, token.digest]
-      }).then(({ rows }) => token.id = rows[0].id);
-    }
-  };
+	this.pg = new Pool;
 };

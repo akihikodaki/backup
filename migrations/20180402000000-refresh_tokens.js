@@ -26,7 +26,7 @@ exports.up = (db, callback) => db.createTable('refresh_tokens', {
   },
   id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
   secret: { type: 'bytea', notNull: true },
-  digest: { type: 'bytea', notNull: true, unique: true }
+  digest: { type: 'bytea', notNull: true }
 }, callback);
 
 exports._meta = { version: 1 };
