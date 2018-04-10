@@ -15,9 +15,28 @@
 */
 
 import React from 'react';
+import { connect } from 'react-redux';
+import { noteCreation } from '../actions/notes';
 
-export default class extends React.PureComponent {
-  render() {
-    return 'SESSION CREATED';
+export default connect(state => ({
+  username: state.session.username
+}))(class extends React.PureComponent {
+  componentWillMount() {
+    this.post = event => {
+      event.preventDefault();
+      this.props.dispatch(noteCreation(event.target.elements.text.value));
+    };
   }
-}
+
+  render() {
+    return (
+      <div>
+        {this.props.username}
+        <form onSubmit={this.post}>
+          <textarea name='text' />
+          <button>Post</button>
+        </form>
+      </div>
+    );
+  }
+});

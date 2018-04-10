@@ -14,6 +14,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+const RefreshToken = require('../entities/refresh_token');
+
 module.exports = function() {
   this.refreshTokens = {
     insert: token => this.pg.query({
@@ -26,7 +28,7 @@ module.exports = function() {
       name: 'refresh_tokens.selectById',
       text: 'SELECT * FROM refresh_tokens WHERE id = $1',
       values: [id]
-    }).then(({ rows: [{ user_id, secret, digest }] }) => ({
+    }).then(({ rows: [{ user_id, secret, digest }] }) => new RefreshToken({
       id,
       userId: user_id,
       secret,

@@ -14,6 +14,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import 'babel-polyfill';
 import React from 'react';
 import { render } from 'react-dom';
 import { applyMiddleware, createStore } from 'redux';

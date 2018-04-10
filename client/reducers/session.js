@@ -14,10 +14,10 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default (state = { created: false }, action) => {
+export default (state = { username: null, accessToken: null }, action) => {
   switch (action.type) {
   case 'SESSION_CREATION':
-    return { created: true };
+    return { username: action.username, accessToken: action.accessToken };
   default:
     return state;
   }

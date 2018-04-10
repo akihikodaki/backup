@@ -15,13 +15,31 @@
 */
 
 const express = require('express');
+const User = require('../entities/user');
+const createOutbox = require('./outbox');
 
-module.exports = () => {
+module.exports = repositories => {
   const application = express();
 
-  application.get('/@:user', ({ params }, response) => {
-    response.sendStatus(404);
+  application.get('/@:username', async ({ hostname, params }, response) => {
+    try {
+      const user = new User(await repositories.users.selectByUsername(params.username));
+      const id = `https://${hostname}/@${user.username}`;
+
+      return response.json({
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        id,
+        type: 'Person',
+        preferredUsername: user.username,
+        outbox: id + '/activitypub/outbox'
+      });
+    } catch (error) {
+      console.error(error);
+      response.sendStatus(500);
+    }
   });
+
+  application.use(createOutbox(repositories));
 
   return application;
 };

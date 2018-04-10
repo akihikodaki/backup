@@ -20,9 +20,9 @@ import Dashboard from './dashboard';
 import Landing from './landing';
 
 export default connect(state => ({
-  sessionCreated: state.session.created,
+  signedIn: state.session.username in state.persons,
 }))(class extends React.PureComponent {
   render() {
-    return this.props.sessionCreated ? <Dashboard /> : <Landing />;
+    return this.props.signedIn ? <Dashboard /> : <Landing />;
   }
 });

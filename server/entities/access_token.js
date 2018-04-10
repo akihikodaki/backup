@@ -22,7 +22,7 @@ module.exports = class extends Token {
     return base64url(Buffer.concat([this.digest, clientSecret]));
   }
 
-  static getDigestAndClientSecret() {
+  static getDigestAndClientSecret(tokenString) {
     const buffer = base64url.toBuffer(tokenString);
 
     return {

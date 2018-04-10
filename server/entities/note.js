@@ -14,18 +14,15 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const createAccessTokens = require('./access_tokens');
-const createNotes = require('./notes');
-const createPg = require('./pg');
-const createRedis = require('./redis');
-const createRefreshTokens = require('./refresh_tokens');
-const createUsers = require('./users');
+module.exports = class {
+  constructor({ id, user, userId, text }) {
+    this.id = id;
+    this.user = user;
+    this.userId = userId;
+    this.text = text;
+  }
 
-module.exports = function(redis) {
-  createAccessTokens.call(this);
-  createNotes.call(this);
-  createPg.call(this);
-  createRedis.call(this, redis);
-  createRefreshTokens.call(this);
-  createUsers.call(this);
+  static create(user, text) {
+    return new this({ user, userId: user.id, text });
+  }
 };

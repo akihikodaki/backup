@@ -14,20 +14,42 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { personFetch } from './persons';
 import { request } from './request';
 
+function sessionCreation(username, { response }) {
+  return dispatch => Promise.all([
+    dispatch(personFetch(username)),
+    dispatch({
+      type: 'SESSION_CREATION',
+      username,
+      accessToken: response.access_token
+    })
+  ]);
+}
+
 export function signin(username, password) {
-  return dispatch => dispatch(request(
-    'POST',
-    '/oauth/token',
-    new URLSearchParams({ grant_type: 'password', username, password })
-  )).then(() => dispatch({ type: 'SESSION_CREATION' }));
+  return dispatch => dispatch(request('POST', '/oauth/token', instance => {
+    instance.responseType = 'json';
+    instance.send(new URLSearchParams({
+      grant_type: 'password',
+      username,
+      password
+    }));
+  })).then(({ target }) => dispatch(sessionCreation(username, target)));
 }
 
 export function signup(username, password) {
-  return dispatch => dispatch(request(
-    'POST',
-    '/api/v0/signup',
-    new URLSearchParams({ username, password })
-  )).then(() => dispatch({ type: 'SESSION_CREATION' }));
+  return dispatch => dispatch(request('POST', '/api/v0/signup', instance => {
+    instance.responseType = 'json';
+    instance.send(new URLSearchParams({ username, password }));
+  })).then(({ target }) => dispatch(sessionCreation(username, target)));
+}
+
+export function authorizedRequest(method, url, callback) {
+  return (dispatch, getState) => dispatch(request(method, url, instance => {
+    const { accessToken } = getState().session;
+    instance.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+    callback(instance);
+  }));
 }

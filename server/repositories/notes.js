@@ -14,18 +14,12 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const createAccessTokens = require('./access_tokens');
-const createNotes = require('./notes');
-const createPg = require('./pg');
-const createRedis = require('./redis');
-const createRefreshTokens = require('./refresh_tokens');
-const createUsers = require('./users');
-
-module.exports = function(redis) {
-  createAccessTokens.call(this);
-  createNotes.call(this);
-  createPg.call(this);
-  createRedis.call(this, redis);
-  createRefreshTokens.call(this);
-  createUsers.call(this);
-};
+module.exports = function() {
+  this.notes = {
+    insert: note => this.pg.query({
+      name: 'notes.insert',
+      text: 'INSERT INTO notes (user_id, text) VALUES ($1, $2) RETURNING id',
+      values: [note.userId, note.text]
+    }).then(({ rows }) => note.id = rows[0].id)
+  };
+}

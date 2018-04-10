@@ -14,18 +14,13 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const createAccessTokens = require('./access_tokens');
-const createNotes = require('./notes');
-const createPg = require('./pg');
-const createRedis = require('./redis');
-const createRefreshTokens = require('./refresh_tokens');
-const createUsers = require('./users');
-
-module.exports = function(redis) {
-  createAccessTokens.call(this);
-  createNotes.call(this);
-  createPg.call(this);
-  createRedis.call(this, redis);
-  createRefreshTokens.call(this);
-  createUsers.call(this);
+export default (state = Object.create(null), action) => {
+  switch (action.type) {
+  case 'PERSON_FETCH':
+    return Object.assign(Object.create(null), state, {
+      [action.response.preferredUsername]: action.response
+    });
+  default:
+    return state;
+  }
 };

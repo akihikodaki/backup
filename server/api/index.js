@@ -15,19 +15,14 @@
 */
 
 const express = require('express');
-const User = require('./entities/user');
+const signup = require('./signup');
+const streaming = require('./streaming');
 
-module.exports = ({ users }) => {
+module.exports = repositories => {
   const application = express();
 
-  application.post('/v0/signup', express.urlencoded({ extended: false }), ({ body }, response) => {
-    User.create(body.username, body.password).then(users.insert).then(() => {
-      response.status(202).end();
-    }, error => {
-      console.error(error);
-      response.sendStatus(500);
-    });
-  });
+  application.use(signup);
+  application.use(streaming);
 
   return application;
 };

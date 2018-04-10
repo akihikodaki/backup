@@ -16,7 +16,7 @@
 
 const express = require('express');
 const createApi = require('./api');
-const createOauth = require('./oauth');
+const createOauthProvider = require('./oauth/provider');
 const Repositories = require('./repositories');
 const createUser = require('./user');
 
@@ -25,8 +25,8 @@ module.exports = redis => {
   const repositories = new Repositories(redis);
 
   application.use('/api', createApi(repositories));
-  application.use('/oauth', createOauth(repositories));
-  application.use(createUser());
+  application.use('/oauth', createOauthProvider(repositories));
+  application.use(createUser(repositories));
   application.use(express.static('dist'));
 
   return application;

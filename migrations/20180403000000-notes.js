@@ -14,18 +14,18 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const createAccessTokens = require('./access_tokens');
-const createNotes = require('./notes');
-const createPg = require('./pg');
-const createRedis = require('./redis');
-const createRefreshTokens = require('./refresh_tokens');
-const createUsers = require('./users');
+exports.up = (db, callback) => db.createTable('notes', {
+  id: { type: 'bigint', autoIncrement: true, notNull: true, primaryKey: true },
+  user_id: {
+    type: 'int',
+    notNull: true,
+    foreignKey: {
+      table: 'users',
+      rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
+      mapping: 'id',
+    }
+  },
+  text: { type: 'string', notNull: true }
+}, callback);
 
-module.exports = function(redis) {
-  createAccessTokens.call(this);
-  createNotes.call(this);
-  createPg.call(this);
-  createRedis.call(this, redis);
-  createRefreshTokens.call(this);
-  createUsers.call(this);
-};
+exports._meta = { version: 1 };

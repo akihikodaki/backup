@@ -14,7 +14,25 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+const User = require('../entities/user');
+
 module.exports = function() {
+  const selectByForeignUserId = async foreign => {
+    if (foreign.user) {
+      return foreign.user;
+    }
+
+    const { rows } = await this.pg.query({
+      name: 'users.selectByForeignUserId',
+      text: 'SELECT * FROM users WHERE id = $1',
+      values: [foreign.userId],
+    });
+
+    foreign.user = new User(rows[0]);
+
+    return foreign.user;
+  };
+
   this.users = {
     insert: user => this.pg.query({
       name: 'users.insert',
@@ -22,24 +40,13 @@ module.exports = function() {
       values: [user.salt, user.username, user.password]
     }).then(({ rows }) => user.id = rows[0].id),
 
-    selectByRefreshToken: async token => {
-      if (token.user) {
-        return token.user;
-      }
-
-      const { rows } = await this.pg.query({
-        name: 'users.selectByRefreshToken',
-        text: 'SELECT * FROM users WHERE id = $1',
-        values: [token.userId],
-      });
-
-      return rows[0];
-    },
+    selectByAccessToken: selectByForeignUserId,
+    selectByRefreshToken: selectByForeignUserId,
 
     selectByUsername: username => this.pg.query({
       name: 'users.selectByUsername',
       text: 'SELECT * FROM users WHERE username = $1',
       values: [username]
-    }).then(({ rows }) => rows[0])
+    }).then(({ rows }) => new User(rows[0]))
   };
 };

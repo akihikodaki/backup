@@ -15,6 +15,7 @@
 */
 
 const { promisify } = require('util');
+const AccessToken = require('../entities/access_token');
 
 function createKey(digest) {
   const buffer = Buffer.allocUnsafe('accessTokens:'.length + digest.byteLength);
@@ -42,7 +43,12 @@ module.exports = function() {
           reject(error);
         } else {
           const buffer = Buffer.from(string, 'binary');
-          resolve({ digest, secret });
+
+          resolve(new AccessToken({
+            digest,
+            userId: buffer.readInt32BE(0),
+            secret: buffer.slice(4)
+          }));
         }
       });
     })

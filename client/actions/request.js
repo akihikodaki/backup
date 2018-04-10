@@ -14,18 +14,14 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export function request(method, url, body) {
-  return () => {
+export function request(method, url, callback) {
+  return () => new Promise((resolve, reject) => {
     const instance = new XMLHttpRequest;
 
+    instance.onload = resolve;
+    instance.onerror = reject;
     instance.open(method, url);
-    instance.responseType = 'json';
 
-    return new Promise((resolve, reject) => {
-      instance.onload = resolve;
-      instance.onerror = reject;
-
-      instance.send(body);
-    });
-  };
+    callback(instance);
+  });
 }

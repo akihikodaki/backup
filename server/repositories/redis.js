@@ -17,6 +17,9 @@
 const { createClient } = require('redis');
 
 module.exports = function(redis) {
-	this.redis = createClient(redis);
-	this.redis.on('error', console.error);
+  this.redis = redis ?
+    createClient(redis, { detect_buffers: true }) :
+    createClient({ detect_buffers: true });
+
+  this.redis.on('error', console.error);
 };

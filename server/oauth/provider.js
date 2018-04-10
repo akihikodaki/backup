@@ -18,9 +18,8 @@ const { randomBytes } = require('crypto');
 const express = require('express');
 const oauth2orize = require('oauth2orize');
 const { promisify } = require('util');
-const AccessToken = require('./entities/access_token');
-const RefreshToken = require('./entities/refresh_token');
-const User = require('./entities/user');
+const AccessToken = require('../entities/access_token');
+const RefreshToken = require('../entities/refresh_token');
 
 const promisifiedRandomBytes = promisify(randomBytes);
 
@@ -30,8 +29,7 @@ module.exports = ({ accessTokens, refreshTokens, users }) => {
 
   oauth2Server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, done) => {
     try {
-      const attributes = await users.selectByUsername(username);
-      const user = new User(attributes);
+      const user = await users.selectByUsername(username);
 
       if (!await user.authenticate(password)) {
         done();
@@ -70,9 +68,11 @@ module.exports = ({ accessTokens, refreshTokens, users }) => {
 
   oauth2Server.exchange(oauth2orize.exchange.refreshToken(async (client, tokenString, scope, done) => {
     try {
-      const { id, clientSecret } = RefreshToken.getIdAndClientSecret(tokenString);
+      const { id, clientSecret } =
+        RefreshToken.getIdAndClientSecret(tokenString);
+
       const asyncBuffer = promisifiedRandomBytes(512);
-      const refreshToken = new RefreshToken(await refreshTokens.selectById(id));
+      const refreshToken = await refreshTokens.selectById(id);
 
       if (!refreshToken.authenticate(clientSecret)) {
         done();

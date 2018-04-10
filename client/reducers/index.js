@@ -15,6 +15,8 @@
 */
 
 import { combineReducers } from 'redux';
+import notes from './notes';
+import persons from './persons';
 import session from './session';
 
-export default combineReducers({ session });
+export default combineReducers({ persons, session });

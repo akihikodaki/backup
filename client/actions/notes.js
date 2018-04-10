@@ -14,18 +14,19 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const createAccessTokens = require('./access_tokens');
-const createNotes = require('./notes');
-const createPg = require('./pg');
-const createRedis = require('./redis');
-const createRefreshTokens = require('./refresh_tokens');
-const createUsers = require('./users');
+import { authorizedRequest } from './session';
 
-module.exports = function(redis) {
-  createAccessTokens.call(this);
-  createNotes.call(this);
-  createPg.call(this);
-  createRedis.call(this, redis);
-  createRefreshTokens.call(this);
-  createUsers.call(this);
-};
+export function noteCreation(text) {
+  return (dispatch, getState) => {
+    const { outbox } = getState().persons[getState().session.username];
+
+    return dispatch(authorizedRequest('POST', outbox, instance => {
+      instance.setRequestHeader('Content-Type', 'application/activity+json');
+      instance.send(JSON.stringify({
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        type: 'Note',
+        text,
+      }));
+    }));
+  };
+}

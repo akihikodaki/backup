@@ -14,18 +14,20 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const createAccessTokens = require('./access_tokens');
-const createNotes = require('./notes');
-const createPg = require('./pg');
-const createRedis = require('./redis');
-const createRefreshTokens = require('./refresh_tokens');
-const createUsers = require('./users');
+const express = require('express');
+const User = require('../entities/user');
 
-module.exports = function(redis) {
-  createAccessTokens.call(this);
-  createNotes.call(this);
-  createPg.call(this);
-  createRedis.call(this, redis);
-  createRefreshTokens.call(this);
-  createUsers.call(this);
+module.exports = ({ users }) => {
+  const application = express();
+
+  application.post('/v0/signup', express.urlencoded({ extended: false }), ({ body }, response) => {
+    User.create(body.username, body.password).then(users.insert).then(() => {
+      response.status(202).end();
+    }, error => {
+      console.error(error);
+      response.sendStatus(500);
+    });
+  });
+
+  return application;
 };
