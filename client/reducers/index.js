@@ -18,5 +18,6 @@ import { combineReducers } from 'redux';
 import notes from './notes';
 import persons from './persons';
 import session from './session';
+import streaming from './streaming';
 
-export default combineReducers({ persons, session });
+export default combineReducers({ persons, session, streaming });

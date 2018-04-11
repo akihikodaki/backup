@@ -14,14 +14,19 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import 'babel-polyfill';
-import { applyMiddleware, createStore } from 'redux';
-import thunk from 'redux-thunk';
-import reducers from './reducers';
-import subscribeReact from './subscribers/react';
-import subscribeStreaming from './subscribers/streaming';
+export default store => {
+  let socket;
 
-const store = createStore(reducers, applyMiddleware(thunk));
+  store.subscribe(() => {
+    if ((socket == null) == store.getState().streaming.opening) {
+      return;
+    }
 
-subscribeReact(store, document.getElementById('root'));
-subscribeStreaming(store);
+    if (socket) {
+      socket.close();
+    } else {
+      socket = new WebSocket(`wss://${location.host}/api/v0/streaming`);
+      socket.onmessage = console.log;
+    }
+  });
+};

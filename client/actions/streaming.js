@@ -14,14 +14,6 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import 'babel-polyfill';
-import { applyMiddleware, createStore } from 'redux';
-import thunk from 'redux-thunk';
-import reducers from './reducers';
-import subscribeReact from './subscribers/react';
-import subscribeStreaming from './subscribers/streaming';
-
-const store = createStore(reducers, applyMiddleware(thunk));
-
-subscribeReact(store, document.getElementById('root'));
-subscribeStreaming(store);
+export function open() {
+  return { type: 'STREAMING_OPEN' };
+}

@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { connect } from 'react-redux';
-import { signin, signup } from '../actions/session';
+import { signin, signup } from '../../../actions/session';
 
 export default connect()(class extends React.PureComponent {
   componentWillMount() {

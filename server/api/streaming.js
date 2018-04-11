@@ -14,13 +14,15 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const express = require('express');
+const { Server } = require('ws');
 
 module.exports = ({ users }) => {
-  const routing = express();
-  const streaming = express();
+  const server = new Server({ noServer: true });
 
-  routing.use('/v0/streaming', streaming);
+  server.on('connection', connection => {
+    connection.on('message', console.log);
+    connection.send('hello, world');
+  });
 
-  return routing;
+  return server;
 };
