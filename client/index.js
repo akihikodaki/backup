@@ -15,13 +15,7 @@
 */
 
 import 'babel-polyfill';
-import { applyMiddleware, createStore } from 'redux';
-import thunk from 'redux-thunk';
-import reducers from './reducers';
-import subscribeReact from './subscribers/react';
-import subscribeStreaming from './subscribers/streaming';
+import Home from './home';
+import Store from './store';
 
-const store = createStore(reducers, applyMiddleware(thunk));
-
-subscribeReact(store, document.getElementById('root'));
-subscribeStreaming(store);
+new Home({ target: document.body, store: new Store });

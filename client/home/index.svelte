@@ -1,4 +1,4 @@
-/*
+<!--
   Copyright (C) 2018  Akihiko Odaki <nekomanma@pixiv.co.jp>
 
   This program is free software: you can redistribute it and/or modify
@@ -12,16 +12,23 @@
 
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+-->
 
-export function request(method, url, callback) {
-  return () => new Promise((resolve, reject) => {
-    const instance = new XMLHttpRequest;
+{{#if signedIn}}
+  <Dashboard />
+{{else}}
+  <Landing />
+{{/if}}
+<script>
+  import Dashboard from './dashboard';
+  import Landing from './landing';
 
-    instance.onload = resolve;
-    instance.onerror = reject;
-    instance.open(method, url);
-
-    callback(instance);
-  });
-}
+  export default {
+    components: { Dashboard, Landing },
+    computed: {
+      signedIn($sessionUsername, $persons) {
+        return $sessionUsername in $persons;
+      }
+    }
+  };
+</script>
