@@ -14,15 +14,19 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const { Server } = require('ws');
+import { fetch } from './fetch';
 
-module.exports = () => {
-  const server = new Server({ noServer: true });
+export default function() {
+  this.fetchPerson = async function(username) {
+    const { target: { response } } = await fetch.call(this, 'GET', '/@' + username, instance => {
+      instance.responseType = 'json';
+      instance.send();
+    });
 
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
-  });
-
-  return server;
-};
+    this.set({
+      persons: Object.assign(Object.create(null), this.get('persons'), {
+        [response.preferredUsername]: response
+      })
+    });
+  };
+}

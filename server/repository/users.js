@@ -16,37 +16,43 @@
 
 const User = require('../entities/user');
 
-module.exports = function() {
-  const selectByForeignUserId = async foreign => {
-    if (foreign.user) {
-      return foreign.user;
-    }
-
-    const { rows } = await this.pg.query({
-      name: 'users.selectByForeignUserId',
-      text: 'SELECT * FROM users WHERE id = $1',
-      values: [foreign.userId],
-    });
-
-    foreign.user = new User(rows[0]);
-
+async function selectByForeignUserId(foreign) {
+  if (foreign.user) {
     return foreign.user;
-  };
+  }
 
-  this.users = {
-    insert: user => this.pg.query({
+  const { rows } = await this.pg.query({
+    name: 'users.selectByForeignUserId',
+    text: 'SELECT * FROM users WHERE id = $1',
+    values: [foreign.userId],
+  });
+
+  foreign.user = new User(rows[0]);
+
+  return foreign.user;
+}
+
+module.exports = {
+  async insertUser(user) {
+    const { rows } = await this.pg.query({
       name: 'users.insert',
       text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
       values: [user.salt, user.username, user.password]
-    }).then(({ rows }) => user.id = rows[0].id),
+    });
 
-    selectByAccessToken: selectByForeignUserId,
-    selectByRefreshToken: selectByForeignUserId,
+    user.id = rows[0].id;
+  },
 
-    selectByUsername: username => this.pg.query({
+  selectUserByAccessToken: selectByForeignUserId,
+  selectUserByRefreshToken: selectByForeignUserId,
+
+  async selectByUsername(username) {
+    const { rows } = await this.pg.query({
       name: 'users.selectByUsername',
       text: 'SELECT * FROM users WHERE username = $1',
       values: [username]
-    }).then(({ rows }) => new User(rows[0]))
-  };
+    });
+
+    return new User(rows[0]);
+  }
 };

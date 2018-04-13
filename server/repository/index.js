@@ -14,15 +14,23 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const { Server } = require('ws');
+const constructPg = require('./constructors/pg');
+const constructRedis = require('./constructors/redis');
+const AccessTokens = require('./access_tokens');
+const Feed = require('./feed');
+const Notes = require('./notes');
+const RefreshTokens = require('./refresh_tokens');
+const Users = require('./users');
 
-module.exports = () => {
-  const server = new Server({ noServer: true });
-
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
-  });
-
-  return server;
+module.exports = function(redis) {
+  constructPg.call(this);
+  constructRedis.call(this, redis);
 };
+
+Object.assign(
+  module.exports.prototype,
+  AccessTokens,
+  Feed,
+  Notes,
+  RefreshTokens,
+  Users);

@@ -14,15 +14,23 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const { Server } = require('ws');
+export function fetch(method, url, callback) {
+  return new Promise((resolve, reject) => {
+    const instance = new XMLHttpRequest;
 
-module.exports = () => {
-  const server = new Server({ noServer: true });
+    instance.onload = resolve;
+    instance.onerror = reject;
+    instance.open(method, url);
 
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
+    callback(instance);
   });
+}
 
-  return server;
+export function fetchAuthorized(method, url, callback) {
+  return fetch.call(this, method, url, instance => {
+    const accessToken = this.get('sessionAccessToken');
+    instance.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+    callback(instance);
+  });
 };
+

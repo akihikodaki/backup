@@ -14,15 +14,14 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const { Server } = require('ws');
+module.exports = {
+  async insertFollow(follow) {
+    const { rows } = this.pg.query({
+      name: 'follows.insert',
+      text: 'INSERT INTO follows (actor_id, object_id) VALUES ($1, $2) RETURNING id',
+      values: [follow.actor.id, follow.object.id]
+    });
 
-module.exports = () => {
-  const server = new Server({ noServer: true });
-
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
-  });
-
-  return server;
+    follow.id = rows[0].id;
+  }
 };

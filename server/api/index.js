@@ -16,13 +16,11 @@
 
 const express = require('express');
 const signup = require('./signup');
-const streaming = require('./streaming');
 
-module.exports = repositories => {
+module.exports = repository => {
   const application = express();
 
-  application.use(signup);
-  application.use(streaming);
+  application.use(signup(repository));
 
   return application;
 };

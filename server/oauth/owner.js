@@ -17,7 +17,7 @@
 const express = require('express');
 const AccessToken = require('../entities/access_token');
 
-module.exports = ({ accessTokens, users }) => {
+module.exports = repository => {
   const application = express();
 
   application.use(async(request, response, next) => {
@@ -34,7 +34,7 @@ module.exports = ({ accessTokens, users }) => {
       const { digest, clientSecret } =
         AccessToken.getDigestAndClientSecret(token);
 
-      const accessToken = await accessTokens.selectByDigest(digest);
+      const accessToken = await repository.selectAccessTokenByDigest(digest);
 
       if (!accessToken.authenticate(clientSecret)) {
         response.append('WWW-Authenticate', 'Bearer error="invalid_token",error_description="The access token provided is expired, revoked, malformed, or invalid for other reasons.",error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"');
@@ -42,7 +42,7 @@ module.exports = ({ accessTokens, users }) => {
         return;
       }
 
-      request.user = await users.selectByAccessToken(accessToken);
+      request.user = await repository.selectUserByAccessToken(accessToken);
     } catch (error) {
       console.error(error);
       response.sendStatus(500);

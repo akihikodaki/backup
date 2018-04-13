@@ -18,12 +18,12 @@ const express = require('express');
 const User = require('../entities/user');
 const createOutbox = require('./outbox');
 
-module.exports = repositories => {
+module.exports = repository => {
   const application = express();
 
   application.get('/@:username', async ({ hostname, params }, response) => {
     try {
-      const user = new User(await repositories.users.selectByUsername(params.username));
+      const user = new User(await repository.selectUserByUsername(params.username));
       const id = `https://${hostname}/@${user.username}`;
 
       return response.json({
@@ -39,7 +39,7 @@ module.exports = repositories => {
     }
   });
 
-  application.use(createOutbox(repositories));
+  application.use(createOutbox(repository));
 
   return application;
 };

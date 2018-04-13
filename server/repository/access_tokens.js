@@ -26,18 +26,18 @@ function createKey(digest) {
   return buffer;
 }
 
-module.exports = function() {
-  this.accessTokens = {
-    insert: promisify((token, callback) => {
-      const buffer = Buffer.allocUnsafe(token.secret.byteLength + 4);
+module.exports = {
+  insertAccessToken: promisify(function(token, callback) {
+    const buffer = Buffer.allocUnsafe(token.secret.byteLength + 4);
 
-      buffer.writeInt32BE(token.user.id, 0);
-      token.secret.copy(buffer, 4);
+    buffer.writeInt32BE(token.user.id, 0);
+    token.secret.copy(buffer, 4);
 
-      this.redis.setex(createKey(token.digest), 1048576, buffer, callback);
-    }),
+    this.redis.setex(createKey(token.digest), 1048576, buffer, callback);
+  }),
 
-    selectByDigest: digest => new Promise((resolve, reject) => {
+  selectAccessTokenByDigest(digest) {
+    return new Promise((resolve, reject) => {
       this.redis.get(createKey(digest), (error, string) => {
         if (error) {
           reject(error);
@@ -51,6 +51,6 @@ module.exports = function() {
           }));
         }
       });
-    })
-  };
+    });
+  }
 };

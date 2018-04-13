@@ -27,15 +27,6 @@
   </form>
 </div>
 <script>
-  function createSession(store, sessionUsername, { response }) {
-    store.set({
-      sessionUsername,
-      sessionAccessToken: response.access_token
-    });
-
-    return store.fetchPerson(sessionUsername);
-  }
-
   export default {
     methods: {
       signin(event) {
@@ -44,14 +35,11 @@
 
         event.preventDefault();
 
-        this.store.fetch('POST', '/oauth/token', instance => {
-          instance.responseType = 'json';
-          instance.send(new URLSearchParams({
-            grant_type: 'password',
-            username,
-            password
-          }));
-        }).then(({ target }) => createSession(this.store, username, target));
+        this.store.oauth(username, {
+          grant_type: 'password',
+          username,
+          password
+        });
       },
 
       signup(event) {
@@ -59,11 +47,7 @@
         const password = event.target.elements.password.value;
 
         event.preventDefault();
-
-        this.store.fetch('POST', '/api/v0/signup', instance => {
-          instance.responseType = 'json';
-          instance.send(new URLSearchParams({ username, password }));
-        }).then(({ target }) => createSession(this.store, username, target));
+        this.store.signup(username, { username, password });
       }
     }
   };

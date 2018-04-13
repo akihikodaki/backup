@@ -29,6 +29,18 @@
       signedIn($sessionUsername, $persons) {
         return $sessionUsername in $persons;
       }
+    },
+    oncreate() {
+      const refreshToken = localStorage.getItem('activeNode.session.refreshToken');
+
+      if (refreshToken !== null) {
+        const username = localStorage.getItem('activeNode.session.username');
+
+        this.store.oauth(username, {
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken
+        });
+      }
     }
   };
 </script>

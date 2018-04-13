@@ -16,23 +16,29 @@
 
 const RefreshToken = require('../entities/refresh_token');
 
-module.exports = function() {
-  this.refreshTokens = {
-    insert: token => this.pg.query({
+module.exports = {
+  async insertRefreshToken(token) {
+    const { rows } = await this.pg.query({
       name: 'refresh_tokens.insert',
       text: 'INSERT INTO refresh_tokens (user_id, secret, digest) VALUES ($1, $2, $3) RETURNING id',
       values: [token.user.id, token.secret, token.digest]
-    }).then(({ rows }) => token.id = rows[0].id),
+    });
 
-    selectById: id => this.pg.query({
+    token.id = rows[0].id;
+  },
+
+  async selectRefreshTokenById(id) {
+    const { rows: [{ user_id, secret, digest }] } = await this.pg.query({
       name: 'refresh_tokens.selectById',
       text: 'SELECT * FROM refresh_tokens WHERE id = $1',
       values: [id]
-    }).then(({ rows: [{ user_id, secret, digest }] }) => new RefreshToken({
+    });
+
+    return new RefreshToken({
       id,
       userId: user_id,
       secret,
       digest
-    }))
-  };
+    });
+  }
 };

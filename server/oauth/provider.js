@@ -23,13 +23,13 @@ const RefreshToken = require('../entities/refresh_token');
 
 const promisifiedRandomBytes = promisify(randomBytes);
 
-module.exports = ({ accessTokens, refreshTokens, users }) => {
+module.exports = repository => {
   const application = express();
   const oauth2Server = oauth2orize.createServer();
 
   oauth2Server.exchange(oauth2orize.exchange.password(async (client, username, password, scope, done) => {
     try {
-      const user = await users.selectByUsername(username);
+      const user = await repository.selectUserByUsername(username);
 
       if (!await user.authenticate(password)) {
         done();
@@ -53,8 +53,8 @@ module.exports = ({ accessTokens, refreshTokens, users }) => {
         refreshTokenClientSecret);
 
       await Promise.all([
-        accessTokens.insert(accessToken),
-        refreshTokens.insert(refreshToken)
+        repository.insertAccessToken(accessToken),
+        repository.insertRefreshToken(refreshToken)
       ]);
 
       done(
@@ -72,14 +72,14 @@ module.exports = ({ accessTokens, refreshTokens, users }) => {
         RefreshToken.getIdAndClientSecret(tokenString);
 
       const asyncBuffer = promisifiedRandomBytes(512);
-      const refreshToken = await refreshTokens.selectById(id);
+      const refreshToken = await repository.selectRefreshTokenById(id);
 
       if (!refreshToken.authenticate(clientSecret)) {
         done();
         return;
       }
 
-      const user = await users.selectByRefreshToken(refreshToken);
+      const user = await repository.selectUserByRefreshToken(refreshToken);
       const buffer = await asyncBuffer;
 
       const accessTokenServerSecret = buffer.slice(0, 128);
@@ -90,7 +90,7 @@ module.exports = ({ accessTokens, refreshTokens, users }) => {
         accessTokenServerSecret,
         accessTokenClientSecret);
 
-      await accessTokens.insert(accessToken);
+      await repository.insertAccessToken(accessToken);
 
       done(null, accessToken.getToken(accessTokenClientSecret));
     } catch (error) {

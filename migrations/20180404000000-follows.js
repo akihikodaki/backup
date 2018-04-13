@@ -14,15 +14,26 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const { Server } = require('ws');
+exports.up = (db, callback) => db.createTable('follows', {
+  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
+  actor_id: {
+    type: 'int',
+    notNull: true,
+    foreignKey: {
+      table: 'users',
+      rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
+      mapping: 'id',
+    }
+  },
+  object_id: {
+    type: 'int',
+    notNull: true,
+    foreignKey: {
+      table: 'users',
+      rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
+      mapping: 'id',
+    }
+  }
+}, callback);
 
-module.exports = () => {
-  const server = new Server({ noServer: true });
-
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
-  });
-
-  return server;
-};
+exports._meta = { version: 1 };

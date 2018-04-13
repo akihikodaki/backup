@@ -17,11 +17,11 @@
 const express = require('express');
 const User = require('../entities/user');
 
-module.exports = ({ users }) => {
+module.exports = repository => {
   const application = express();
 
   application.post('/v0/signup', express.urlencoded({ extended: false }), ({ body }, response) => {
-    User.create(body.username, body.password).then(users.insert).then(() => {
+    User.create(body.username, body.password).then(repository.insertUser.bind(repository)).then(() => {
       response.status(202).end();
     }, error => {
       console.error(error);

@@ -14,15 +14,19 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const { Server } = require('ws');
+import { fetchAuthorized } from './fetch';
 
-module.exports = () => {
-  const server = new Server({ noServer: true });
+export default function() {
+  this.createNote = function(text) {
+    const { outbox } = this.get('persons')[this.get('sessionUsername')];
 
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
-  });
-
-  return server;
-};
+    return fetchAuthorized.call(this, 'POST', outbox, instance => {
+      instance.setRequestHeader('Content-Type', 'application/activity+json');
+      instance.send(JSON.stringify({
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        type: 'Note',
+        text,
+      }));
+    });
+  };
+}

@@ -14,12 +14,10 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-module.exports = function() {
-  this.notes = {
-    insert: note => this.pg.query({
-      name: 'notes.insert',
-      text: 'INSERT INTO notes (user_id, text) VALUES ($1, $2) RETURNING id',
-      values: [note.userId, note.text]
-    }).then(({ rows }) => note.id = rows[0].id)
+export default function() {
+  this.stream = function() {
+    const streaming = new WebSocket(`wss://${location.host}/api/v0/streaming`);
+    streaming.onmessage = console.log;
+    this.set('streaming', streaming);
   };
 }

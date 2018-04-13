@@ -14,15 +14,26 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const { Server } = require('ws');
+import { Store as Base } from 'svelte/store';
+import createNotes from './notes';
+import createPersons from './persons';
+import createSession from './session';
+import createStreaming from './streaming';
 
-module.exports = () => {
-  const server = new Server({ noServer: true });
+class Store extends Base {
+  constructor() {
+    super({
+      persons: Object.create(null),
+      sessionAccessToken: null,
+      sessionUsername: null,
+      streaming: null
+    });
+  }
+}
 
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
-  });
+createNotes.call(Store.prototype);
+createPersons.call(Store.prototype);
+createSession.call(Store.prototype);
+createStreaming.call(Store.prototype);
 
-  return server;
-};
+export default Store;

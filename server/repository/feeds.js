@@ -14,15 +14,10 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-const { Server } = require('ws');
+const { promisify } = require('util');
 
-module.exports = () => {
-  const server = new Server({ noServer: true });
-
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
-  });
-
-  return server;
+module.exports = {
+  insertFeed: promisify(function(user, note, callback) {
+    this.redis.zadd(`feeds:${user.id}`, note.id, note.id, callback);
+  })
 };

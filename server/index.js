@@ -19,18 +19,18 @@ const { createServer } = require('http');
 const createApi = require('./api');
 const createApiStreaming = require('./api/streaming');
 const createOauthProvider = require('./oauth/provider');
-const Repositories = require('./repositories');
+const Repository = require('./repository');
 const createUser = require('./user');
 
 module.exports = redis => {
   const application = express();
-  const repositories = new Repositories(redis);
+  const repository = new Repository(redis);
   const server = createServer(application);
-  const apiStreaming = createApiStreaming(repositories);
+  const apiStreaming = createApiStreaming(repository);
 
-  application.use('/api', createApi(repositories));
-  application.use('/oauth', createOauthProvider(repositories));
-  application.use(createUser(repositories));
+  application.use('/api', createApi(repository));
+  application.use('/oauth', createOauthProvider(repository));
+  application.use(createUser(repository));
   application.use(express.static('dist'));
 
   server.on('upgrade', (request, socket, head) => {

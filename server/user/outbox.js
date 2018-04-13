@@ -18,12 +18,12 @@ const express = require('express');
 const Note = require('../entities/note');
 const oauthOwner = require('../oauth/owner');
 
-module.exports = (repositories) => {
+module.exports = repository => {
   const application = express();
 
-  application.post('/@:username/activitypub/outbox', oauthOwner(repositories), express.json({
+  application.post('/@:username/activitypub/outbox', oauthOwner(repository), express.json({
     type: ['application/activity+json', 'application/ld+json']
-  }), async ({ body, params, user }, response) => {
+  }), async ({ body, hostname, params, user }, response) => {
     try {
       if (params.username !== user.username) {
         response.sendStatus(401);
@@ -32,13 +32,34 @@ module.exports = (repositories) => {
 
       if ((Array.isArray(body['@context']) ?
             !body['@context'].includes('https://www.w3.org/ns/activitystreams') :
-            body['@context'] !== 'https://www.w3.org/ns/activitystreams') ||
-          body.type !== 'Note') {
+            body['@context'] !== 'https://www.w3.org/ns/activitystreams')) {
         response.sendStatus(400);
         return;
       }
 
-      await repositories.notes.insert(Note.create(user, body.text));
+      const localUserPrefix = `https://${hostname}/@`;
+
+      switch (body.type) {
+      case 'Follow':
+        if (typeof body.object !== 'string' || !body.object.startsWith(localUserPrefix) {
+          response.sendStatus(422);
+          return;
+        }
+
+        await repository.insertFollow(Follow.create(
+          user,
+          await repository.selectUserByUsername(
+            body.object.slice(localUserPrefix.length))));
+        break;
+
+      case 'Note':
+        await repository.insertNote(Note.create(user, body.text));
+        break;
+
+      default:
+        response.sendStatus(400);
+        return;
+      }
     } catch (error) {
       console.error(error);
       response.sendStatus(500);

@@ -19,3 +19,7 @@ import Home from './home';
 import Store from './store';
 
 new Home({ target: document.body, store: new Store });
+
+if (module.hot) {
+  module.hot.accept(() => location.reload());
+}

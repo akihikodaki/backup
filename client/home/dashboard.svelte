@@ -13,6 +13,7 @@
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
+
 <h1>{{$sessionUsername}}</h1>
 <form on:submit='post(event)'>
   <textarea name='text' />
@@ -26,18 +27,8 @@
 
     methods: {
       post(event) {
-        const { outbox } = this.store.get('persons')[this.store.get('sessionUsername')];
-
         event.preventDefault();
-
-        return this.store.fetchAuthorized('POST', outbox, instance => {
-          instance.setRequestHeader('Content-Type', 'application/activity+json');
-          instance.send(JSON.stringify({
-            '@context': 'https://www.w3.org/ns/activitystreams',
-            type: 'Note',
-            text: event.target.elements.text.value,
-          }));
-        });
+        this.store.createNote(event.target.elements.text.value);
       }
     }
   };
