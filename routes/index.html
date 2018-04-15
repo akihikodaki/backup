@@ -36,7 +36,7 @@
       if (refreshToken !== null) {
         const username = localStorage.getItem('activeNode.session.username');
 
-        this.store.oauth(username, {
+        this.store.oauth(fetch, username, {
           grant_type: 'refresh_token',
           refresh_token: refreshToken
         });

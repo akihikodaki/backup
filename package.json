@@ -27,7 +27,7 @@
     "oauth2orize": "^1.11.0",
     "pg": "^7.4.1",
     "redis": "^2.8.0",
-    "sapper": "git+https://github.com/akihikodaki/sapper.git",
+    "sapper": "file:../sapper/sapper-0.10.5.tgz",
     "svelte": "^1.57.3",
     "svelte-loader": "^2.3.3",
     "webpack": "^4.1.0",

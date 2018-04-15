@@ -19,7 +19,6 @@ import sapper from 'sapper';
 import serve from 'serve-static';
 import { routes } from '../manifest/server.js';
 import Store from '../store';
-import createOauth from './oauth/server';
 import Repository from './repository';
 import createStreaming from './streaming';
 const express = require('express');
@@ -27,18 +26,12 @@ const express = require('express');
 export default redis => {
   const application = express();
   const repository = new Repository(redis);
-  const oauthServer = createOauth(repository);
-  const streaming = createStreaming(repository);
   const server = createServer(application);
-  const oauth = {
-    token: oauthServer.token(),
-    errorHandler: oauthServer.errorHandler()
-  };
+  const streaming = createStreaming(repository);
 
   application.use(
     serve('assets'),
     (request, response, next) => {
-      request.oauth = oauth;
       request.repository = repository;
       next();
     },

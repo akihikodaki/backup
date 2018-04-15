@@ -14,33 +14,31 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { fetch } from './fetch';
-
-function createSession(sessionUsername, { response }) {
+function createSession(sessionUsername, { access_token }) {
   this.set({
     sessionUsername,
-    sessionAccessToken: response.access_token
+    sessionAccessToken: access_token
   });
 
-  return this.fetchPerson(sessionUsername);
+  return this.fetchPerson(fetch, sessionUsername);
 }
 
 export default function() {
-  this.oauth = async function(username, params) {
-    const { target } = await fetch.call(this, 'POST', '/oauth/token', instance => {
-      instance.responseType = 'json';
-      instance.send(new URLSearchParams(params));
+  this.oauth = async function(fetch, username, params) {
+    const fetched = await fetch('/oauth/token', {
+      method: 'POST',
+      body: new URLSearchParams(params)
     });
 
-    createSession.call(this, username, target);
+    createSession.call(this, username, await fetched.json());
   };
 
-  this.signup = async function(username, params) {
-    const { target } = await fetch.call(this, 'POST', '/api/v0/signup', instance => {
-      instance.responseType = 'json';
-      instance.send(new URLSearchParams(params));
+  this.signup = async function(fetch, username, params) {
+    const fetched = await fetch('/api/v0/signup', {
+      method: 'POST',
+      body: new URLSearchParams(params)
     });
 
-    createSession.call(this, username, target);
+    createSession.call(this, username, await fetched.json());
   };
 }

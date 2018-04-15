@@ -28,7 +28,7 @@
     methods: {
       post(event) {
         event.preventDefault();
-        this.store.createNote(event.target.elements.text.value);
+        this.store.createNote(fetch, event.target.elements.text.value);
       }
     }
   };

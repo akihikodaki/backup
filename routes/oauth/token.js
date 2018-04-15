@@ -20,7 +20,9 @@ import createServer from '../../app/server/oauth/server';
 const urlencodedMiddleware = urlencoded({ extended: false });
 
 export function post(request, response, next) {
+  const server = createServer(request.repository);
+
   urlencodedMiddleware(request, response,
-    () => request.oauth.token(request, response,
-      () => request.oauth.errorHandler(request, response, next)));
+    () => server.token()(request, response,
+      () => server.errorHandler()(request, response, next)));
 }

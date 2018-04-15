@@ -17,16 +17,17 @@
 import { fetchAuthorized } from './fetch';
 
 export default function() {
-  this.createNote = function(text) {
+  this.createNote = function(fetch, text) {
     const { outbox } = this.get('persons')[this.get('sessionUsername')];
 
-    return fetchAuthorized.call(this, 'POST', outbox, instance => {
-      instance.setRequestHeader('Content-Type', 'application/activity+json');
-      instance.send(JSON.stringify({
+    return fetchAuthorized.call(this, fetch, outbox, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/activity+json' },
+      body: JSON.stringify({
         '@context': 'https://www.w3.org/ns/activitystreams',
         type: 'Note',
         text,
-      }));
+      })
     });
   };
 }

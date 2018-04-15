@@ -1,4 +1,4 @@
-/*
+<!--
   Copyright (C) 2018  Akihiko Odaki <nekomanma@pixiv.co.jp>
 
   This program is free software: you can redistribute it and/or modify
@@ -12,19 +12,13 @@
 
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+-->
 
-export default function() {
-  this.fetchPerson = async function(fetch, username) {
-    const fetched = await fetch('/@' + username, {
-      headers: { Accept: 'application/activity+json;q=0.9,application/ld+json;q=0.8' }
-    });
-    const body = await fetched.json();
-
-    this.set({
-      persons: Object.assign(Object.create(null), this.get('persons'), {
-        [body.preferredUsername]: body
-      })
-    });
+<h1>{{username}}</h1>
+<script>
+  export default {
+    preload({ params }) {
+      return this.store.fetchPerson(this.fetch, params.username).then(() => params);
+    }
   };
-}
+</script>

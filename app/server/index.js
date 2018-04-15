@@ -17,5 +17,5 @@
 import create from './create';
 
 create(process.env.REDIS)
-  .listen(process.env.LISTENTO)
+  .listen(process.env.PORT)
   .on('error', console.error);

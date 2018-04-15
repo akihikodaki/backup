@@ -14,23 +14,22 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import User from '../../app/server/entities/user';
-const express = require('express');
+export async function get(request, response, next) {
+  const accepted = request.accepts(['html', 'application/activity+json', 'application/ld+json']);
 
-export async function get({ hostname, params, repository }, response) {
-  try {
-    const user = new User(await repository.selectUserByUsername(params.username));
-    const id = `https://${hostname}/@${user.username}`;
-
-    return response.json({
-      '@context': 'https://www.w3.org/ns/activitystreams',
-      id,
-      type: 'Person',
-      preferredUsername: user.username,
-      outbox: id + '/activitypub/outbox'
-    });
-  } catch (error) {
-    console.error(error);
-    response.sendStatus(500);
+  if (!['application/activity+json', 'application/ld+json'].includes(accepted)) {
+    next();
+    return;
   }
+
+  const user = await request.repository.selectUserByUsername(request.params.username);
+  const id = `https://${request.hostname}/@${user.username}`;
+
+  return response.json({
+    '@context': 'https://www.w3.org/ns/activitystreams',
+    id,
+    type: 'Person',
+    preferredUsername: user.username,
+    outbox: id + '/activitypub/outbox'
+  });
 }

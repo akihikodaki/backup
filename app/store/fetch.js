@@ -14,23 +14,11 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export function fetch(method, url, callback) {
-  return new Promise((resolve, reject) => {
-    const instance = new XMLHttpRequest;
-
-    instance.onload = resolve;
-    instance.onerror = reject;
-    instance.open(method, url);
-
-    callback(instance);
-  });
-}
-
-export function fetchAuthorized(method, url, callback) {
-  return fetch.call(this, method, url, instance => {
-    const accessToken = this.get('sessionAccessToken');
-    instance.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-    callback(instance);
-  });
+export function fetchAuthorized(url, options) {
+  return this.fetch(url, Object.assign({
+    headers: Object.assign({
+      Authorization: 'Bearer ' + this.get('sessionAccessToken')
+    }, options.headers)
+  }, options));
 };
 
