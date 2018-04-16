@@ -23,10 +23,10 @@ import Streaming from './streaming';
 class Store extends Base {}
 
 Object.assign(
-	Store.prototype,
-	Notes,
-	Persons,
-	Session,
-	Streaming);
+  Store.prototype,
+  Notes,
+  Persons,
+  Session,
+  Streaming);
 
 export default Store;

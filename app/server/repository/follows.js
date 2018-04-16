@@ -16,7 +16,7 @@
 
 export default {
   async insertFollow(follow) {
-    const { rows } = this.pg.query({
+    const { rows } = await this.pg.query({
       name: 'follows.insert',
       text: 'INSERT INTO follows (actor_id, object_id) VALUES ($1, $2) RETURNING id',
       values: [follow.actor.id, follow.object.id]

@@ -14,11 +14,16 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-function createSession(sessionUsername, { access_token }) {
+function createSession(sessionUsername, { access_token, refresh_token }) {
   this.set({
     sessionUsername,
     sessionAccessToken: access_token
   });
+
+  if (refresh_token) {
+    localStorage.setItem(this.get('sessionRefreshTokenKey'), refresh_token);
+    localStorage.setItem(this.get('sessionUsernameKey'), sessionUsername);
+  }
 
   return this.fetchPerson(fetch, sessionUsername);
 }

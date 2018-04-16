@@ -14,6 +14,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { postOutbox } from './fetch';
+
 export default {
   async fetchPerson(fetch, username) {
     const fetched = await fetch('/@' + username, {
@@ -25,6 +27,16 @@ export default {
       persons: Object.assign(Object.create(null), this.get('persons'), {
         [body.preferredUsername]: body
       })
+    });
+
+    return fetched;
+  },
+
+  follow(fetch, username) {
+    return postOutbox.call(this, fetch, {
+      '@context': 'https://www.w3.org/ns/activitystreams',
+      type: 'Follow',
+      object: this.get('persons')[username].id,
     });
   }
 }

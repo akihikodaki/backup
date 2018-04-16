@@ -16,18 +16,26 @@
 
 import { urlencoded } from 'express';
 import User from '../../../app/server/entities/user';
+import { issue } from '../../../app/server/oauth/server';
 
 const urlencodedMiddleware = urlencoded({ extended: false });
 
 export function post(request, response) {
   urlencodedMiddleware(request, response, () => {
-    User.create(request.body.username, request.body.password)
-        .then(repository.insertUser.bind(repository))
-        .then(() => {
-          response.status(202).end();
-        }, error => {
-          console.error(error);
-          response.sendStatus(500);
-        });
+    const { body, repository } = request;
+
+    User.create(body.username, body.password).then(async user => {
+      await repository.insertUser(user);
+      const { accessToken, refreshToken } = await issue(repository, user);
+
+      return {
+        token_type: 'Bearer',
+        access_token: accessToken,
+        refresh_token: refreshToken
+      };
+    }).then(body => response.json(body), error => {
+      console.error(error);
+      response.sendStatus(500);
+    });
   });
 }

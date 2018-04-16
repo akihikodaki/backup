@@ -15,6 +15,7 @@
 */
 
 import { json } from 'express';
+import Follow from '../../../app/server/entities/follow';
 import Note from '../../../app/server/entities/note';
 import oauthOwner from '../../../app/server/oauth/owner';
 

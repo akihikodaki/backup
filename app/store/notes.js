@@ -14,20 +14,14 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { fetchAuthorized } from './fetch';
+import { postOutbox } from './fetch';
 
 export default {
   createNote(fetch, text) {
-    const { outbox } = this.get('persons')[this.get('sessionUsername')];
-
-    return fetchAuthorized.call(this, fetch, outbox, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/activity+json' },
-      body: JSON.stringify({
-        '@context': 'https://www.w3.org/ns/activitystreams',
-        type: 'Note',
-        text,
-      })
+    return postOutbox.call(this, fetch, {
+      '@context': 'https://www.w3.org/ns/activitystreams',
+      type: 'Note',
+      text,
     });
   }
 }

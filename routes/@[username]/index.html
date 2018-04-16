@@ -15,10 +15,25 @@
 -->
 
 <h1>{{username}}</h1>
+{{#if $sessionUsername && $sessionUsername != username}}
+  <button on:click='follow()'>Follow</button>
+{{/if}}
 <script>
   export default {
     preload({ params }) {
-      return this.store.fetchPerson(this.fetch, params.username).then(() => params);
+      return this.store.fetchPerson(this.fetch, params.username).then(({ status, statusText }) => {
+        if (status === 200) {
+          return params;
+        }
+
+        this.error(status, statusText);
+      });
+    },
+
+    methods: {
+      follow() {
+        this.store.follow(fetch, this.get('username'));
+      }
     }
   };
 </script>

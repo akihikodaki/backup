@@ -14,19 +14,15 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('notes', {
-  id: { type: 'bigint', autoIncrement: true, notNull: true, primaryKey: true },
-  user_id: {
-    type: 'int',
-    notNull: true,
-    foreignKey: {
-      name: 'user_id',
-      table: 'users',
-      rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
-      mapping: 'id',
-    }
-  },
-  text: { type: 'string', notNull: true }
-}, callback);
+export default class {
+  constructor({ actor, actorId, object, objectId }) {
+    this.actor = actor;
+    this.actorId = actorId;
+    this.object = object;
+    this.objectId = objectId;
+  }
 
-exports._meta = { version: 1 };
+  static create(actor, object) {
+    return new this({ actor, actorId: actor.id, object, objectId: object.id });
+  }
+};

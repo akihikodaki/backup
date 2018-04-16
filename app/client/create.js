@@ -14,19 +14,28 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('notes', {
-  id: { type: 'bigint', autoIncrement: true, notNull: true, primaryKey: true },
-  user_id: {
-    type: 'int',
-    notNull: true,
-    foreignKey: {
-      name: 'user_id',
-      table: 'users',
-      rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
-      mapping: 'id',
-    }
-  },
-  text: { type: 'string', notNull: true }
-}, callback);
+import { init } from 'sapper/runtime.js';
+import { routes } from '../manifest/client.js';
+import Store from '../store';
 
-exports._meta = { version: 1 };
+export default node => init(node, routes, {
+  store(data) {
+    const store = new Store(data);
+
+    if (process.browser) {
+      const refreshToken =
+        localStorage.getItem(store.get('sessionRefreshTokenKey'));
+
+      if (refreshToken !== null) {
+        const username = localStorage.getItem(store.get('sessionUsernameKey'));
+
+        store.oauth(fetch, username, {
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken
+        });
+      }
+    }
+
+    return store;
+  }
+});

@@ -41,7 +41,9 @@ export default redis => {
         return new Store({
           persons: Object.create(null),
           sessionAccessToken: null,
+          sessionRefreshTokenKey: 'activeNode.session.refreshToken',
           sessionUsername: null,
+          sessionUsernameKey: 'activeNode.session.username',
           streaming: null
         });
       }

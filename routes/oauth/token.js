@@ -15,7 +15,7 @@
 */
 
 import { urlencoded } from 'express';
-import createServer from '../../app/server/oauth/server';
+import { createServer } from '../../app/server/oauth/server';
 
 const urlencodedMiddleware = urlencoded({ extended: false });
 

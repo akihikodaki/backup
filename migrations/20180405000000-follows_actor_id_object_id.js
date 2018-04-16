@@ -14,16 +14,9 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { init } from 'sapper/runtime.js';
-import { routes } from './manifest/client.js';
-import Store from './store';
-
-init(document.getElementById('root'), routes, {
-  store(data) {
-    return new Store(data);
-  }
-});
-
-if (module.hot) {
-  module.hot.accept();
-}
+exports.up = (db, callback) => db.addIndex(
+  'follows',
+  'follows_actor_id_object_id',
+  ['actor_id', 'object_id'],
+  true,
+  callback);

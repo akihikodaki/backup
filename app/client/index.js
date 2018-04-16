@@ -14,19 +14,10 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('notes', {
-  id: { type: 'bigint', autoIncrement: true, notNull: true, primaryKey: true },
-  user_id: {
-    type: 'int',
-    notNull: true,
-    foreignKey: {
-      name: 'user_id',
-      table: 'users',
-      rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
-      mapping: 'id',
-    }
-  },
-  text: { type: 'string', notNull: true }
-}, callback);
+import create from './create';
 
-exports._meta = { version: 1 };
+create(document.getElementById('root'));
+
+if (module.hot) {
+  module.hot.accept();
+}

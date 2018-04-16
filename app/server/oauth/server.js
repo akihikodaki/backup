@@ -15,87 +15,96 @@
 */
 
 import { randomBytes } from 'crypto';
-import { createServer, exchange } from 'oauth2orize';
+import * as oauth2orize from 'oauth2orize';
 import { promisify } from 'util';
 import AccessToken from '../entities/access_token';
 import RefreshToken from '../entities/refresh_token';
 
 const promisifiedRandomBytes = promisify(randomBytes);
 
-export default repository => {
-  const server = createServer();
+export async function issue(repository, user) {
+  const buffer = await promisifiedRandomBytes(512);
+  const accessTokenServerSecret = buffer.slice(0, 128);
+  const accessTokenClientSecret = buffer.slice(128, 256);
+  const refreshTokenServerSecret = buffer.slice(256, 384);
+  const refreshTokenClientSecret = buffer.slice(384, 512);
 
-  server.exchange(exchange.password(async (client, username, password, scope, done) => {
-    try {
-      const user = await repository.selectUserByUsername(username);
+  const accessToken = AccessToken.create(
+    user,
+    accessTokenServerSecret,
+    accessTokenClientSecret);
 
-      if (!await user.authenticate(password)) {
-        done();
-        return;
+  const refreshToken = RefreshToken.create(
+    user,
+    refreshTokenServerSecret,
+    refreshTokenClientSecret);
+
+  await Promise.all([
+    repository.insertAccessToken(accessToken),
+    repository.insertRefreshToken(refreshToken)
+  ]);
+
+  return {
+    accessToken: accessToken.getToken(accessTokenClientSecret),
+    refreshToken: refreshToken.getToken(refreshTokenClientSecret)
+  };
+}
+
+export async function refresh(repository, user) {
+  const buffer = await promisifiedRandomBytes(512);
+
+  const accessTokenServerSecret = buffer.slice(0, 128);
+  const accessTokenClientSecret = buffer.slice(128, 256);
+
+  const accessToken = AccessToken.create(
+    user, accessTokenServerSecret, accessTokenClientSecret);
+
+  await repository.insertAccessToken(accessToken);
+
+  return accessToken.getToken(accessTokenClientSecret);
+}
+
+export function createServer(repository) {
+  const server = oauth2orize.createServer();
+
+  server.exchange(oauth2orize.exchange.password(
+    async (client, username, password, scope, done) => {
+      try {
+        const user = await repository.selectUserByUsername(username);
+
+        if (!await user.authenticate(password)) {
+          done();
+          return;
+        }
+
+        const { accessToken, refreshToken } = await issue(repository, user);
+
+        done(null, accessToken, refreshToken);
+      } catch (error) {
+        done(error);
       }
+    }));
 
-      const buffer = await promisifiedRandomBytes(512);
-      const accessTokenServerSecret = buffer.slice(0, 128);
-      const accessTokenClientSecret = buffer.slice(128, 256);
-      const refreshTokenServerSecret = buffer.slice(256, 384);
-      const refreshTokenClientSecret = buffer.slice(384, 512);
+  server.exchange(oauth2orize.exchange.refreshToken(
+    async (client, tokenString, scope, done) => {
+      try {
+        const { id, clientSecret } =
+          RefreshToken.getIdAndClientSecret(tokenString);
+        const refreshToken = await repository.selectRefreshTokenById(id);
 
-      const accessToken = AccessToken.create(
-        user,
-        accessTokenServerSecret,
-        accessTokenClientSecret);
+        if (!refreshToken.authenticate(clientSecret)) {
+          done();
+          return;
+        }
 
-      const refreshToken = RefreshToken.create(
-        user,
-        refreshTokenServerSecret,
-        refreshTokenClientSecret);
+        const user = await repository.selectUserByRefreshToken(refreshToken);
 
-      await Promise.all([
-        repository.insertAccessToken(accessToken),
-        repository.insertRefreshToken(refreshToken)
-      ]);
-
-      done(
-        null,
-        accessToken.getToken(accessTokenClientSecret),
-        refreshToken.getToken(refreshTokenClientSecret));
-    } catch (error) {
-      done(error);
-    }
-  }));
-
-  server.exchange(exchange.refreshToken(async (client, tokenString, scope, done) => {
-    try {
-      const { id, clientSecret } =
-        RefreshToken.getIdAndClientSecret(tokenString);
-
-      const asyncBuffer = promisifiedRandomBytes(512);
-      const refreshToken = await repository.selectRefreshTokenById(id);
-
-      if (!refreshToken.authenticate(clientSecret)) {
-        done();
-        return;
+        done(null, await refresh(repository, user));
+      } catch (error) {
+        console.dir(error);
+        done(error);
       }
-
-      const user = await repository.selectUserByRefreshToken(refreshToken);
-      const buffer = await asyncBuffer;
-
-      const accessTokenServerSecret = buffer.slice(0, 128);
-      const accessTokenClientSecret = buffer.slice(128, 256);
-
-      const accessToken = AccessToken.create(
-        user,
-        accessTokenServerSecret,
-        accessTokenClientSecret);
-
-      await repository.insertAccessToken(accessToken);
-
-      done(null, accessToken.getToken(accessTokenClientSecret));
-    } catch (error) {
-      console.dir(error);
-      done(error);
-    }
-  }));
+    }));
 
   return server;
-};
+}

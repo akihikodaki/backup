@@ -18,6 +18,7 @@ import constructPg from './constructors/pg';
 import constructRedis from './constructors/redis';
 import AccessTokens from './access_tokens';
 import Feeds from './feeds';
+import Follows from './follows';
 import Notes from './notes';
 import RefreshTokens from './refresh_tokens';
 import Users from './users';
@@ -31,6 +32,7 @@ Object.assign(
   Repository.prototype,
   AccessTokens,
   Feeds,
+  Follows,
   Notes,
   RefreshTokens,
   Users);
