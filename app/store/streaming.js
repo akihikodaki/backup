@@ -14,10 +14,10 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default function() {
-  this.stream = function() {
+export default {
+  stream() {
     const streaming = new WebSocket(`wss://${location.host}/api/v0/streaming`);
     streaming.onmessage = console.log;
     this.set('streaming', streaming);
-  };
+  }
 }

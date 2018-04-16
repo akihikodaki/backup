@@ -15,16 +15,18 @@
 */
 
 import { Store as Base } from 'svelte/store';
-import createNotes from './notes';
-import createPersons from './persons';
-import createSession from './session';
-import createStreaming from './streaming';
+import Notes from './notes';
+import Persons from './persons';
+import Session from './session';
+import Streaming from './streaming';
 
 class Store extends Base {}
 
-createNotes.call(Store.prototype);
-createPersons.call(Store.prototype);
-createSession.call(Store.prototype);
-createStreaming.call(Store.prototype);
+Object.assign(
+	Store.prototype,
+	Notes,
+	Persons,
+	Session,
+	Streaming);
 
 export default Store;

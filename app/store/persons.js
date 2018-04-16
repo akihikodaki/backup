@@ -14,8 +14,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default function() {
-  this.fetchPerson = async function(fetch, username) {
+export default {
+  async fetchPerson(fetch, username) {
     const fetched = await fetch('/@' + username, {
       headers: { Accept: 'application/activity+json;q=0.9,application/ld+json;q=0.8' }
     });
@@ -26,5 +26,5 @@ export default function() {
         [body.preferredUsername]: body
       })
     });
-  };
+  }
 }

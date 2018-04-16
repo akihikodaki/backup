@@ -23,22 +23,22 @@ function createSession(sessionUsername, { access_token }) {
   return this.fetchPerson(fetch, sessionUsername);
 }
 
-export default function() {
-  this.oauth = async function(fetch, username, params) {
+export default {
+  async oauth(fetch, username, params) {
     const fetched = await fetch('/oauth/token', {
       method: 'POST',
       body: new URLSearchParams(params)
     });
 
     createSession.call(this, username, await fetched.json());
-  };
+  },
 
-  this.signup = async function(fetch, username, params) {
+  async signup(fetch, username, params) {
     const fetched = await fetch('/api/v0/signup', {
       method: 'POST',
       body: new URLSearchParams(params)
     });
 
     createSession.call(this, username, await fetched.json());
-  };
+  }
 }

@@ -16,8 +16,8 @@
 
 import { fetchAuthorized } from './fetch';
 
-export default function() {
-  this.createNote = function(fetch, text) {
+export default {
+  createNote(fetch, text) {
     const { outbox } = this.get('persons')[this.get('sessionUsername')];
 
     return fetchAuthorized.call(this, fetch, outbox, {
@@ -29,5 +29,5 @@ export default function() {
         text,
       })
     });
-  };
+  }
 }
