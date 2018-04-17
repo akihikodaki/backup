@@ -15,7 +15,7 @@
 */
 
 import { promisify } from 'util';
-import AccessToken from '../entities/access_token';
+import AccessToken from '../models/access_token';
 
 function createKey(digest) {
   const buffer = Buffer.allocUnsafe('accessTokens:'.length + digest.byteLength);

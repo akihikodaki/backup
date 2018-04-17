@@ -48,6 +48,17 @@ export default class {
     this.password = password;
   }
 
+  toActivityStreams({ origin }) {
+    const id = `${origin}/@${this.username}`;
+
+    return {
+      id: id,
+      type: 'Person',
+      preferredUsername: this.username,
+      outbox: id + '/outbox'
+    };
+  }
+
   async authenticate(rawPassword) {
     const hashedPassword = await hashPassword(rawPassword, this.salt);
     return timingSafeEqual(this.password, hashedPassword);

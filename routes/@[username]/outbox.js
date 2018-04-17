@@ -15,21 +15,22 @@
 */
 
 import { json } from 'express';
-import Follow from '../../app/server/entities/follow';
-import Note from '../../app/server/entities/note';
-import oauthOwner from '../../app/server/oauth/owner';
+import Follow from '../../app/server/models/follow';
+import Note from '../../app/server/models/note';
+import OrderedCollection from '../../app/server/models/ordered_collection';
+import { middleware as oauthOwner } from '../../app/server/oauth/owner';
 
 const middleware = json({
   type: ['application/activity+json', 'application/ld+json']
 });
 
-export function get({ params, repository }, response, next) {
-  repository.selectRecentNotesByUsername(params.username).then(notes => {
-    response.json({
-      '@context': 'https://www.w3.org/ns/activitystreams',
-      type: 'OrderedCollection',
-      orderedItems: notes.map(({ text }) => ({ type: 'Note', text }))
-    });
+export function get({ params, server }, response, next) {
+  server.selectRecentNotesByUsername(params.username).then(orderedItems => {
+    const collection = new OrderedCollection({ orderedItems });
+    const activityStreams = collection.toActivityStreams(server);
+
+    activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
+    response.json(activityStreams);
   }).catch(next);
 }
 
@@ -52,21 +53,24 @@ export function post(request, response, next) {
 
       switch (request.body.type) {
       case 'Follow':
-        if (typeof request.body.object !== 'string' ||
-            !request.body.object.startsWith(localUserPrefix)) {
-          response.sendStatus(422);
-          return;
-        }
+        const follow = await Follow.fromActivityStreams(
+          request.server, request.user, request.body);
 
-        await request.repository.insertFollow(Follow.create(
-          request.user,
-          await request.repository.selectUserByUsername(
-            request.body.object.slice(localUserPrefix.length))));
+        if (follow) {
+          await request.server.insertFollow(follow);
+        } else {
+          response.sendStatus(422);
+        }
         break;
 
       case 'Note':
-        await request.repository.insertNote(
-          Note.create(request.user, request.body.text));
+        const note = Note.fromActivityStreams(request.user, request.body);
+        const [followers] = await Promise.all([
+          request.server.selectUsersByFollowee(request.user),
+          request.server.insertNote(note)
+        ]);
+
+        await request.server.insertIntoInboxes(followers, note);
         break;
 
       default:

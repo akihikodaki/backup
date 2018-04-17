@@ -14,15 +14,27 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default class {
-  constructor({ actor, actorId, object, objectId }) {
-    this.actor = actor;
-    this.actorId = actorId;
-    this.object = object;
-    this.objectId = objectId;
-  }
+import AccessTokens from './access_tokens';
+import Follows from './follows';
+import Listener from './listener';
+import Notes from './notes';
+import RefreshTokens from './refresh_tokens';
+import Users from './users';
 
-  static create(actor, object) {
-    return new this({ actor, actorId: actor.id, object, objectId: object.id });
-  }
+export default function Server({ console, origin, pg, redis }) {
+  this.console = console;
+  this.origin = origin;
+  this.pg = pg;
+  this.redis = redis;
+
+  redis.on('error', console.error);
 };
+
+Object.assign(
+  Server.prototype,
+  AccessTokens,
+  Follows,
+  Listener,
+  Notes,
+  RefreshTokens,
+  Users);

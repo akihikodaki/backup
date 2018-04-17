@@ -16,7 +16,7 @@
 
 export default {
   stream() {
-    const streaming = new WebSocket(`wss://${location.host}/api/v0/streaming`);
+    const streaming = new WebSocket(`wss://${location.host}/api/streaming?access_token=${encodeURIComponent(this.get('sessionAccessToken'))}`);
     streaming.onmessage = console.log;
     this.set('streaming', streaming);
   }

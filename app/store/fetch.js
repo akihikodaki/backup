@@ -20,7 +20,7 @@ export function fetchAuthorized(fetch, url, options) {
       Authorization: 'Bearer ' + this.get('sessionAccessToken')
     }, options.headers)
   }));
-};
+}
 
 export function postOutbox(fetch, body) {
   const { outbox } = this.get('persons')[this.get('sessionUsername')];

@@ -14,25 +14,16 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import constructPg from './constructors/pg';
-import constructRedis from './constructors/redis';
-import AccessTokens from './access_tokens';
-import Feeds from './feeds';
-import Follows from './follows';
-import Notes from './notes';
-import RefreshTokens from './refresh_tokens';
-import Users from './users';
+export default class {
+  constructor({ orderedItems }) {
+    this.orderedItems = orderedItems;
+  }
 
-export default function Repository(redis) {
-  constructPg.call(this);
-  constructRedis.call(this, redis);
+  toActivityStreams(server) {
+    return {
+      type: 'OrderedCollection',
+      orderedItems:
+        this.orderedItems.map(item => item.toActivityStreams(server))
+    };
+  }
 };
-
-Object.assign(
-  Repository.prototype,
-  AccessTokens,
-  Feeds,
-  Follows,
-  Notes,
-  RefreshTokens,
-  Users);

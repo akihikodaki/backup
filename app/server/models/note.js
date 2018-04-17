@@ -14,8 +14,23 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { Pool } from 'pg';
+export default class {
+  constructor({ id, attributedTo, attributedToId, text }) {
+    this.id = id;
+    this.attributedTo = attributedTo;
+    this.attributedToId = attributedToId;
+    this.text = text;
+  }
 
-export default function() {
-	this.pg = new Pool;
+  toActivityStreams() {
+    return { type: 'Note', text: this.text };
+  }
+
+  static create(attributedTo, text) {
+    return new this({ attributedTo, attributedToId: attributedTo.id, text });
+  }
+
+  static fromActivityStreams(attributedTo, { text }) {
+    return this.create(attributedTo, text);
+  }
 };

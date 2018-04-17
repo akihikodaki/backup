@@ -14,7 +14,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import User from '../entities/user';
+import { promisify } from 'util';
+import User from '../models/user';
 
 async function selectByForeignUserId(foreign) {
   if (foreign.user) {
@@ -43,6 +44,13 @@ export default {
     user.id = rows[0].id;
   },
 
+  insertIntoInboxes: promisify(function(users, item, callback) {
+    this.redis
+        .batch(users.map(
+           user => ['zadd', `inbox:${user.id}`, item.id, item.id]))
+        .exec(callback);
+  }),
+
   selectUserByAccessToken: selectByForeignUserId,
   selectUserByRefreshToken: selectByForeignUserId,
 
@@ -54,5 +62,15 @@ export default {
     });
 
     return new User(rows[0]);
+  },
+
+  async selectUsersByFollowee({ id }) {
+    const { rows } = await this.pg.query({
+      name: 'selectUsersByFollowee',
+      text: 'SELECT * FROM users JOIN follows ON users.id = follows.object_id WHERE follows.actor_id = $1',
+      values: [id]
+    });
+
+    return rows.map(row => new User(row));
   }
 };

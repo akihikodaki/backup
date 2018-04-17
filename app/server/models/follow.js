@@ -14,15 +14,27 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { Server } from 'ws';
 
-export default () => {
-  const server = new Server({ noServer: true });
+export default class {
+  constructor({ actor, actorId, object, objectId }) {
+    this.actor = actor;
+    this.actorId = actorId;
+    this.object = object;
+    this.objectId = objectId;
+  }
 
-  server.on('connection', connection => {
-    connection.on('message', console.log);
-    connection.send('hello, world');
-  });
+  static create(actor, object) {
+    return new this({ actor, actorId: actor.id, object, objectId: object.id });
+  }
 
-  return server;
+  static async fromActivityStreams(server, actor, { object }) {
+    const localUserPrefix = server.origin + '/@';
+
+    if (typeof object !== 'string' || !object.startsWith(localUserPrefix)) {
+      return null;
+    }
+
+    return this.create(actor, await server.selectUserByUsername(
+      object.slice(localUserPrefix.length)));
+  }
 };

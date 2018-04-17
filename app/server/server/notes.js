@@ -14,6 +14,9 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { promisify } from 'util';
+import Note from '../models/note';
+
 export default {
   async insertNote(note) {
     const { rows } = await this.pg.query({
@@ -32,6 +35,19 @@ export default {
       values: [username]
     });
 
-    return rows;
+    return rows.map(row => new Note(row));
+  },
+ 
+  async selectRecentNotesFromInbox(user) {
+    const ids = await promisify(this.redis.zrange.bind(this.redis))(`inbox:${user.id}`, 0, -1);
+    const { rows } = await this.pg.query({
+      name: 'selectRecentNotesFromInbox',
+      text: 'SELECT notes.* FROM notes WHERE id = ANY(string_to_array($1, \',\')::integer[])',
+      values: [ids.join()]
+    });
+
+    return ids.map(id => rows.find(id => row.id == id))
+              .filter(Boolean)
+              .map(row => new Note(row));
   }
 };

@@ -17,12 +17,12 @@
 import { randomBytes } from 'crypto';
 import * as oauth2orize from 'oauth2orize';
 import { promisify } from 'util';
-import AccessToken from '../entities/access_token';
-import RefreshToken from '../entities/refresh_token';
+import AccessToken from '../models/access_token';
+import RefreshToken from '../models/refresh_token';
 
 const promisifiedRandomBytes = promisify(randomBytes);
 
-export async function issue(repository, user) {
+export async function issue(server, user) {
   const buffer = await promisifiedRandomBytes(512);
   const accessTokenServerSecret = buffer.slice(0, 128);
   const accessTokenClientSecret = buffer.slice(128, 256);
@@ -40,8 +40,8 @@ export async function issue(repository, user) {
     refreshTokenClientSecret);
 
   await Promise.all([
-    repository.insertAccessToken(accessToken),
-    repository.insertRefreshToken(refreshToken)
+    server.insertAccessToken(accessToken),
+    server.insertRefreshToken(refreshToken)
   ]);
 
   return {
@@ -50,7 +50,7 @@ export async function issue(repository, user) {
   };
 }
 
-export async function refresh(repository, user) {
+export async function refresh(server, user) {
   const buffer = await promisifiedRandomBytes(512);
 
   const accessTokenServerSecret = buffer.slice(0, 128);
@@ -59,25 +59,25 @@ export async function refresh(repository, user) {
   const accessToken = AccessToken.create(
     user, accessTokenServerSecret, accessTokenClientSecret);
 
-  await repository.insertAccessToken(accessToken);
+  await server.insertAccessToken(accessToken);
 
   return accessToken.getToken(accessTokenClientSecret);
 }
 
-export function createServer(repository) {
-  const server = oauth2orize.createServer();
+export function createServer(server) {
+  const oauthServer = oauth2orize.createServer();
 
-  server.exchange(oauth2orize.exchange.password(
+  oauthServer.exchange(oauth2orize.exchange.password(
     async (client, username, password, scope, done) => {
       try {
-        const user = await repository.selectUserByUsername(username);
+        const user = await server.selectUserByUsername(username);
 
         if (!await user.authenticate(password)) {
           done();
           return;
         }
 
-        const { accessToken, refreshToken } = await issue(repository, user);
+        const { accessToken, refreshToken } = await issue(server, user);
 
         done(null, accessToken, refreshToken);
       } catch (error) {
@@ -85,26 +85,26 @@ export function createServer(repository) {
       }
     }));
 
-  server.exchange(oauth2orize.exchange.refreshToken(
+  oauthServer.exchange(oauth2orize.exchange.refreshToken(
     async (client, tokenString, scope, done) => {
       try {
         const { id, clientSecret } =
           RefreshToken.getIdAndClientSecret(tokenString);
-        const refreshToken = await repository.selectRefreshTokenById(id);
+        const refreshToken = await server.selectRefreshTokenById(id);
 
         if (!refreshToken.authenticate(clientSecret)) {
           done();
           return;
         }
 
-        const user = await repository.selectUserByRefreshToken(refreshToken);
+        const user = await server.selectUserByRefreshToken(refreshToken);
 
-        done(null, await refresh(repository, user));
+        done(null, await refresh(server, user));
       } catch (error) {
-        console.dir(error);
+        server.console.dir(error);
         done(error);
       }
     }));
 
-  return server;
+  return oauthServer;
 }

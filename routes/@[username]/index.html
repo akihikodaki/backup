@@ -18,11 +18,13 @@
 {{#if $sessionUsername && $sessionUsername != username}}
   <button on:click='follow()'>Follow</button>
 {{/if}}
-{{#each $persons[username].outbox.orderedItems as item}}
-  {{#if item.type === 'Note'}}
-    {{item.text}}
-  {{/if}}
-{{/each}}
+<ul>
+  {{#each $persons[username].outbox.orderedItems as item}}
+    {{#if item.type === 'Note'}}
+      <li>{{item.text}}</li>
+    {{/if}}
+  {{/each}}
+</ul>
 <script>
   export default {
     async preload({ params }) {

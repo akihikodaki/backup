@@ -39,7 +39,7 @@ export default {
   },
 
   async signup(fetch, username, params) {
-    const fetched = await fetch('/api/v0/signup', {
+    const fetched = await fetch('/api/signup', {
       method: 'POST',
       body: new URLSearchParams(params)
     });

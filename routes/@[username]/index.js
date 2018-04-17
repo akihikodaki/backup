@@ -15,21 +15,21 @@
 */
 
 export async function get(request, response, next) {
-  const accepted = request.accepts(['html', 'application/activity+json', 'application/ld+json']);
+  const accepted = request.accepts([
+    'html',
+    'application/activity+json',
+    'application/ld+json'
+  ]);
 
   if (!['application/activity+json', 'application/ld+json'].includes(accepted)) {
     next();
     return;
   }
 
-  const user = await request.repository.selectUserByUsername(request.params.username);
-  const id = `${process.env.ORIGIN}/@${user.username}`;
+  const { params, server } = request;
+  const user = await server.selectUserByUsername(params.username);
+  const activityStreams = user.toActivityStreams(server);
 
-  return response.json({
-    '@context': 'https://www.w3.org/ns/activitystreams',
-    id,
-    type: 'Person',
-    preferredUsername: user.username,
-    outbox: id + '/outbox'
-  });
+  activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
+  return response.json(activityStreams);
 }
