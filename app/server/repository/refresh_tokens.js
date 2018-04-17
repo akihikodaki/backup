@@ -19,7 +19,7 @@ import RefreshToken from '../entities/refresh_token';
 export default {
   async insertRefreshToken(token) {
     const { rows } = await this.pg.query({
-      name: 'refresh_tokens.insert',
+      name: 'insertRefreshToken',
       text: 'INSERT INTO refresh_tokens (user_id, secret, digest) VALUES ($1, $2, $3) RETURNING id',
       values: [token.user.id, token.secret, token.digest]
     });
@@ -29,7 +29,7 @@ export default {
 
   async selectRefreshTokenById(id) {
     const { rows: [{ user_id, secret, digest }] } = await this.pg.query({
-      name: 'refresh_tokens.selectById',
+      name: 'selectRefreshTokenById',
       text: 'SELECT * FROM refresh_tokens WHERE id = $1',
       values: [id]
     });

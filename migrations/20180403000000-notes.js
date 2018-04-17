@@ -16,11 +16,11 @@
 
 exports.up = (db, callback) => db.createTable('notes', {
   id: { type: 'bigint', autoIncrement: true, notNull: true, primaryKey: true },
-  user_id: {
+  attributed_to_id: {
     type: 'int',
     notNull: true,
     foreignKey: {
-      name: 'user_id',
+      name: 'attributed_to_id',
       table: 'users',
       rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
       mapping: 'id',

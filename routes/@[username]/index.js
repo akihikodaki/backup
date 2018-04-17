@@ -23,13 +23,13 @@ export async function get(request, response, next) {
   }
 
   const user = await request.repository.selectUserByUsername(request.params.username);
-  const id = `https://${request.hostname}/@${user.username}`;
+  const id = `${process.env.ORIGIN}/@${user.username}`;
 
   return response.json({
     '@context': 'https://www.w3.org/ns/activitystreams',
     id,
     type: 'Person',
     preferredUsername: user.username,
-    outbox: id + '/activitypub/outbox'
+    outbox: id + '/outbox'
   });
 }

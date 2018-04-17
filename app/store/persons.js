@@ -17,6 +17,23 @@
 import { postOutbox } from './fetch';
 
 export default {
+  async fetchOutbox(fetch, username) {
+    const persons = this.get('persons');
+    const person = persons[username];
+    const fetched = await fetch(person.outbox, {
+      headers: { Accept: 'application/activity+json;q=0.9,application/ld+json;q=0.8' }
+    });
+    const body = await fetched.json();
+
+    this.set({
+      persons: Object.assign(Object.create(null), persons, {
+        [username]: Object.assign(person, { outbox: body })
+      })
+    });
+
+    return fetched;
+  },
+
   async fetchPerson(fetch, username) {
     const fetched = await fetch('/@' + username, {
       headers: { Accept: 'application/activity+json;q=0.9,application/ld+json;q=0.8' }

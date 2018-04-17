@@ -17,11 +17,21 @@
 export default {
   async insertNote(note) {
     const { rows } = await this.pg.query({
-      name: 'notes.insert',
-      text: 'INSERT INTO notes (user_id, text) VALUES ($1, $2) RETURNING id',
-      values: [note.userId, note.text]
+      name: 'insertNote',
+      text: 'INSERT INTO notes (attributed_to_id, text) VALUES ($1, $2) RETURNING id',
+      values: [note.attributedToId, note.text]
     });
 
     note.id = rows[0].id;
+  },
+
+  async selectRecentNotesByUsername(username) {
+    const { rows } = await this.pg.query({
+      name: 'selectRecentNotesByUsername',
+      text: 'SELECT notes.* FROM notes JOIN users ON notes.attributed_to_id = users.id WHERE users.username = $1 ORDER BY notes.id DESC',
+      values: [username]
+    });
+
+    return rows;
   }
 };

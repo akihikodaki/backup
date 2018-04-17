@@ -15,15 +15,25 @@
 */
 
 import { json } from 'express';
-import Follow from '../../../app/server/entities/follow';
-import Note from '../../../app/server/entities/note';
-import oauthOwner from '../../../app/server/oauth/owner';
+import Follow from '../../app/server/entities/follow';
+import Note from '../../app/server/entities/note';
+import oauthOwner from '../../app/server/oauth/owner';
 
 const middleware = json({
   type: ['application/activity+json', 'application/ld+json']
 });
 
-export function post(request, response) {
+export function get({ params, repository }, response, next) {
+  repository.selectRecentNotesByUsername(params.username).then(notes => {
+    response.json({
+      '@context': 'https://www.w3.org/ns/activitystreams',
+      type: 'OrderedCollection',
+      orderedItems: notes.map(({ text }) => ({ type: 'Note', text }))
+    });
+  }).catch(next);
+}
+
+export function post(request, response, next) {
   oauthOwner(request, response, () => middleware(request, response, async () => {
     try {
       if (request.params.username !== request.user.username) {
@@ -38,7 +48,7 @@ export function post(request, response) {
         return;
       }
 
-      const localUserPrefix = `https://${request.hostname}/@`;
+      const localUserPrefix = `${process.env.ORIGIN}/@`;
 
       switch (request.body.type) {
       case 'Follow':
@@ -64,9 +74,7 @@ export function post(request, response) {
         return;
       }
     } catch (error) {
-      console.error(error);
-      response.sendStatus(500);
-      return;
+      next(error);
     }
 
     response.sendStatus(201);

@@ -18,16 +18,23 @@
 {{#if $sessionUsername && $sessionUsername != username}}
   <button on:click='follow()'>Follow</button>
 {{/if}}
+{{#each $persons[username].outbox.orderedItems as item}}
+  {{#if item.type === 'Note'}}
+    {{item.text}}
+  {{/if}}
+{{/each}}
 <script>
   export default {
-    preload({ params }) {
-      return this.store.fetchPerson(this.fetch, params.username).then(({ status, statusText }) => {
-        if (status === 200) {
-          return params;
-        }
+    async preload({ params }) {
+      const { status, statusText } =
+        await this.store.fetchPerson(this.fetch, params.username);
 
-        this.error(status, statusText);
-      });
+      if (status === 200) {
+        await this.store.fetchOutbox(this.fetch, params.username);
+        return params;
+      }
+
+      this.error(status, statusText);
     },
 
     methods: {

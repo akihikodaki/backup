@@ -15,14 +15,14 @@
 */
 
 export default class {
-  constructor({ id, user, userId, text }) {
+  constructor({ id, attributedTo, attributedToId, text }) {
     this.id = id;
-    this.user = user;
-    this.userId = userId;
+    this.attributedTo = attributedTo;
+    this.attributedToId = attributedToId;
     this.text = text;
   }
 
-  static create(user, text) {
-    return new this({ user, userId: user.id, text });
+  static create(attributedTo, text) {
+    return new this({ attributedTo, attributedToId: attributedTo.id, text });
   }
 };

@@ -35,7 +35,7 @@ async function selectByForeignUserId(foreign) {
 export default {
   async insertUser(user) {
     const { rows } = await this.pg.query({
-      name: 'users.insert',
+      name: 'insertUser',
       text: 'INSERT INTO users (salt, username, password) VALUES ($1, $2, $3) RETURNING id',
       values: [user.salt, user.username, user.password]
     });
@@ -48,7 +48,7 @@ export default {
 
   async selectUserByUsername(username) {
     const { rows } = await this.pg.query({
-      name: 'users.selectByUsername',
+      name: 'selectUserByUsername',
       text: 'SELECT * FROM users WHERE username = $1',
       values: [username]
     });
