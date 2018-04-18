@@ -14,34 +14,35 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-<h1>{{username}}</h1>
-{{#if $sessionUsername && $sessionUsername != username}}
+<h1>{{person.preferredUsername}}</h1>
+{{#if $user && $user.id != person.id}}
   <button on:click='follow()'>Follow</button>
 {{/if}}
-<ul>
-  {{#each $persons[username].outbox.orderedItems as item}}
+<ol>
+  {{#each person.outbox.orderedItems as item}}
     {{#if item.type === 'Note'}}
       <li>{{item.text}}</li>
     {{/if}}
   {{/each}}
-</ul>
+</ol>
 <script>
   export default {
     async preload({ params }) {
-      const { status, statusText } =
+      const personResponse =
         await this.store.fetchPerson(this.fetch, params.username);
 
-      if (status === 200) {
-        await this.store.fetchOutbox(this.fetch, params.username);
-        return params;
+      if (personResponse.status === 200) {
+        const person = await personResponse.json();
+        await this.store.fetchOutbox(this.fetch, person);
+        return { person };
       }
 
-      this.error(status, statusText);
+      this.error(personResponse.status, personResponse.statusText);
     },
 
     methods: {
       follow() {
-        this.store.follow(fetch, this.get('username'));
+        this.store.follow(fetch, this.get('person'));
       }
     }
   };

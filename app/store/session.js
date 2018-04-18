@@ -14,18 +14,18 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-function createSession(sessionUsername, { access_token, refresh_token }) {
-  this.set({
-    sessionUsername,
-    sessionAccessToken: access_token
-  });
-
+async function createSession(username, { access_token, refresh_token }) {
   if (refresh_token) {
-    localStorage.setItem(this.get('sessionRefreshTokenKey'), refresh_token);
-    localStorage.setItem(this.get('sessionUsernameKey'), sessionUsername);
+    localStorage.setItem(this.get('refreshTokenKey'), refresh_token);
+    localStorage.setItem(this.get('usernameKey'), username);
   }
 
-  return this.fetchPerson(fetch, sessionUsername);
+  const personResponse = await this.fetchPerson(fetch, username);
+  const user = await personResponse.json();
+
+  user.inbox = [];
+
+  this.set({ accessToken: access_token, user });
 }
 
 export default {

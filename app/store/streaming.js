@@ -16,8 +16,18 @@
 
 export default {
   stream() {
-    const streaming = new WebSocket(`wss://${location.host}/api/streaming?access_token=${encodeURIComponent(this.get('sessionAccessToken'))}`);
-    streaming.onmessage = console.log;
+    const streaming = new WebSocket(`wss://${location.host}/api/streaming?access_token=${encodeURIComponent(this.get('accessToken'))}`);
+
+    streaming.onmessage = ({ data }) => {
+      const { type, orderedItems } = JSON.parse(data);
+
+      if (type == 'OrderedCollection') {
+        this.set({
+          user: Object.assign({}, this.get('user'), { inbox: orderedItems })
+        });
+      }
+    };
+
     this.set('streaming', streaming);
   }
 }

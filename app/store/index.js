@@ -15,8 +15,8 @@
 */
 
 import { Store as Base } from 'svelte/store';
-import Notes from './notes';
-import Persons from './persons';
+import Note from './note';
+import Person from './person';
 import Session from './session';
 import Streaming from './streaming';
 
@@ -24,8 +24,8 @@ class Store extends Base {}
 
 Object.assign(
   Store.prototype,
-  Notes,
-  Persons,
+  Note,
+  Person,
   Session,
   Streaming);
 

@@ -67,7 +67,7 @@ export default {
   async selectUsersByFollowee({ id }) {
     const { rows } = await this.pg.query({
       name: 'selectUsersByFollowee',
-      text: 'SELECT * FROM users JOIN follows ON users.id = follows.object_id WHERE follows.actor_id = $1',
+      text: 'SELECT users.* FROM users JOIN follows ON users.id = follows.actor_id WHERE follows.object_id = $1',
       values: [id]
     });
 

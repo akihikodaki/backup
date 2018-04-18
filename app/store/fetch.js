@@ -17,15 +17,13 @@
 export function fetchAuthorized(fetch, url, options) {
   return fetch(url, Object.assign(options, {
     headers: Object.assign({
-      Authorization: 'Bearer ' + this.get('sessionAccessToken')
+      Authorization: 'Bearer ' + this.get('accessToken')
     }, options.headers)
   }));
 }
 
 export function postOutbox(fetch, body) {
-  const { outbox } = this.get('persons')[this.get('sessionUsername')];
-
-  return fetchAuthorized.call(this, fetch, outbox, {
+  return fetchAuthorized.call(this, fetch, this.get('user').outbox, {
     headers: { 'Content-Type': 'application/activity+json' },
     method: 'POST',
     body: JSON.stringify(body)

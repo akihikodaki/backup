@@ -14,7 +14,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-{{#if signedIn}}
+{{#if $user}}
   <Dashboard />
 {{else}}
   <Landing />
@@ -25,16 +25,12 @@
 
   export default {
     components: { Dashboard, Landing },
-    computed: {
-      signedIn($sessionUsername, $persons) {
-        return $sessionUsername in $persons;
-      }
-    },
     oncreate() {
-      const refreshToken = localStorage.getItem('activeNode.session.refreshToken');
+      const refreshToken =
+        localStorage.getItem(this.store.get('refreshTokenKey'));
 
       if (refreshToken !== null) {
-        const username = localStorage.getItem('activeNode.session.username');
+        const username = localStorage.getItem(this.store.get('usernameKey'));
 
         this.store.oauth(fetch, username, {
           grant_type: 'refresh_token',

@@ -46,7 +46,7 @@ export default {
       values: [ids.join()]
     });
 
-    return ids.map(id => rows.find(id => row.id == id))
+    return ids.map(id => rows.find(row => row.id == id))
               .filter(Boolean)
               .map(row => new Note(row));
   }

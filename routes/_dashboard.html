@@ -14,11 +14,18 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 
-<h1>{{$sessionUsername}}</h1>
+<h1>{{$user.preferredUsername}}</h1>
 <form on:submit='post(event)'>
   <textarea name='text' />
   <button>Post</button>
 </form>
+<ol>
+  {{#each $user.inbox as item}}
+    {{#if item.type == 'Note'}}
+      <li>{{item.text}}</li>
+    {{/if}}
+  {{/each}}
+</ol>
 <script>
   export default {
     oncreate() {

@@ -38,11 +38,10 @@ export default {
         routes,
         store() {
           return new Store({
-            persons: Object.create(null),
-            sessionAccessToken: null,
-            sessionRefreshTokenKey: 'activeNode.session.refreshToken',
-            sessionUsername: null,
-            sessionUsernameKey: 'activeNode.session.username',
+            accessToken: null,
+            refreshTokenKey: 'activeNode.refreshToken',
+            user: null,
+            usernameKey: 'activeNode.username',
             streaming: null
           });
         }

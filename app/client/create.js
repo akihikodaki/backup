@@ -24,10 +24,10 @@ export default node => init(node, routes, {
 
     if (process.browser) {
       const refreshToken =
-        localStorage.getItem(store.get('sessionRefreshTokenKey'));
+        localStorage.getItem(store.get('refreshTokenKey'));
 
       if (refreshToken !== null) {
-        const username = localStorage.getItem(store.get('sessionUsernameKey'));
+        const username = localStorage.getItem(store.get('usernameKey'));
 
         store.oauth(fetch, username, {
           grant_type: 'refresh_token',
