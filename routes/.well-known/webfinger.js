@@ -14,11 +14,21 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('users', {
-  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  salt: { type: 'bytea', notNull: true },
-  username: { type: 'string', notNull: true, unique: true },
-  password: { type: 'bytea', notNull: true },
-}, callback);
+import { toUnicode } from 'punycode';
 
-exports._meta = { version: 1 };
+export function get({ query, server }, response) {
+  const lowerResource = query.resource.toLowerCase();
+  const [, userpart, host] = /(?:acct:)?(.*)@(.*)/.exec(lowerResource);
+
+  if (toUnicode(host) != server.host.toLowerCase()) {
+    response.sendStatus(404);
+    return;
+  }
+
+  server.selectUserByLowerUsername(decodeURI(userpart)).then(user => {
+    response.json(user.toWebFinger(server));
+  }).catch(error => {
+    console.error(error);
+    response.sendStatus(500);
+  });
+}

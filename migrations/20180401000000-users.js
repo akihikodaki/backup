@@ -14,9 +14,17 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.addIndex(
-  'follows',
-  'follows_actor_id_object_id',
-  ['actor_id', 'object_id'],
-  true,
-  callback);
+exports.up = (db, callback) => db.createTable('users', {
+  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
+  salt: { type: 'bytea', notNull: true },
+  username: { type: 'string', notNull: true },
+  password: { type: 'bytea', notNull: true },
+}, error => {
+  if (error) {
+    callback(error);
+  } else {
+    db.runSql('CREATE UNIQUE INDEX users_username ON users ((lower(username)))', callback);
+  }
+});
+
+exports._meta = { version: 1 };

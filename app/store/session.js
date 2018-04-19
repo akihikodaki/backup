@@ -14,36 +14,41 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-async function createSession(username, { access_token, refresh_token }) {
+async function createSession(user, { access_token, refresh_token }) {
   if (refresh_token) {
     localStorage.setItem(this.get('refreshTokenKey'), refresh_token);
-    localStorage.setItem(this.get('usernameKey'), username);
+    localStorage.setItem(this.get('usernameKey'), user.username);
   }
 
-  const personResponse = await this.fetchPerson(fetch, username);
-  const user = await personResponse.json();
-
   user.inbox = [];
-
   this.set({ accessToken: access_token, user });
 }
 
 export default {
   async oauth(fetch, username, params) {
-    const fetched = await fetch('/oauth/token', {
+    const personResponse = await this.fetchPerson(fetch, username);
+    const user = await personResponse.json();
+
+    const fetched = await fetch(user.oauthTokenEndpoint, {
       method: 'POST',
       body: new URLSearchParams(params)
     });
 
-    createSession.call(this, username, await fetched.json());
+    createSession.call(this, user, await fetched.json());
   },
 
   async signup(fetch, username, params) {
-    const fetched = await fetch('/api/signup', {
+    const sessionResponse = await fetch('/api/signup', {
       method: 'POST',
       body: new URLSearchParams(params)
     });
 
-    createSession.call(this, username, await fetched.json());
+    const [person, session] = await Promise.all([
+      this.fetchPerson(fetch, username)
+          .then(personResponse => personResponse.json()),
+      sessionResponse.json()
+    ]);
+
+    createSession.call(this, person, session);
   }
 }

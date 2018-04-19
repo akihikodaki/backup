@@ -70,7 +70,8 @@ export function createServer(server) {
   oauthServer.exchange(oauth2orize.exchange.password(
     async (client, username, password, scope, done) => {
       try {
-        const user = await server.selectUserByUsername(username);
+        const lowerUsername = username.toLowerCase();
+        const user = await server.selectUserByLowerUsername(lowerUsername);
 
         if (!await user.authenticate(password)) {
           done();

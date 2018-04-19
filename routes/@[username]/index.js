@@ -26,8 +26,8 @@ export async function get(request, response, next) {
     return;
   }
 
-  const { params, server } = request;
-  const user = await server.selectUserByUsername(params.username);
+  const { params: { username }, server } = request;
+  const user = await server.selectUserByLowerUsername(username.toLowerCase());
   const activityStreams = user.toActivityStreams(server);
 
   activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';

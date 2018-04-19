@@ -25,7 +25,9 @@ const middleware = json({
 });
 
 export function get({ params, server }, response, next) {
-  server.selectRecentNotesByUsername(params.username).then(orderedItems => {
+  const lowerUsername = params.username.toLowerCase();
+
+  server.selectRecentNotesByLowerUsername(lowerUsername).then(orderedItems => {
     const collection = new OrderedCollection({ orderedItems });
     const activityStreams = collection.toActivityStreams(server);
 
@@ -42,9 +44,9 @@ export function post(request, response, next) {
         return;
       }
 
-      if ((Array.isArray(request.body['@context']) ?
+      if (Array.isArray(request.body['@context']) ?
             !request.body['@context'].includes('https://www.w3.org/ns/activitystreams') :
-            request.body['@context'] !== 'https://www.w3.org/ns/activitystreams')) {
+            request.body['@context'] !== 'https://www.w3.org/ns/activitystreams') {
         response.sendStatus(400);
         return;
       }

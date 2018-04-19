@@ -36,6 +36,17 @@ exports.up = (db, callback) => db.createTable('follows', {
       mapping: 'id',
     }
   }
-}, callback);
+}, error => {
+  if (error) {
+    callback(error);
+  } else {
+    db.addIndex(
+      'follows',
+      'follows_actor_id_object_id',
+      ['actor_id', 'object_id'],
+      true,
+      callback);
+  }
+});
 
 exports._meta = { version: 1 };

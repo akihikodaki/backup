@@ -15,12 +15,12 @@
 */
 
 import { pbkdf2, randomBytes, timingSafeEqual } from 'crypto';
+import { toASCII } from 'punycode';
 import { promisify } from 'util';
 
-const promisifiedPbkdf2 = promisify(pbkdf2);
 const promisifiedRandomBytes = promisify(randomBytes);
 
-function hashPassword(rawPassword, salt) {
+const hashPassword = promisify((rawPassword, salt, callback) => {
   /*
      NIST Special Publication 800-63B
      Digital Identity Guidelines
@@ -37,8 +37,8 @@ function hashPassword(rawPassword, salt) {
      Intel® SHA Extensions | Intel® Software
      https://software.intel.com/en-us/articles/intel-sha-extensions
   */
-  return promisifiedPbkdf2(rawPassword, salt, 16384, 128, 'sha384');
-}
+  return pbkdf2(rawPassword, salt, 16384, 128, 'sha384', callback);
+});
 
 export default class {
   constructor({ id, salt, username, password }) {
@@ -49,13 +49,30 @@ export default class {
   }
 
   toActivityStreams({ origin }) {
-    const id = `${origin}/@${this.username}`;
+    const id = `${origin}/@${encodeURI(this.username)}`;
 
     return {
-      id: id,
+      id,
       type: 'Person',
       preferredUsername: this.username,
+      oauthTokenEndpoint: `${origin}/oauth/token`,
+      inbox: id + '/inbox',
       outbox: id + '/outbox'
+    };
+  }
+
+  toWebFinger({ host, origin }) {
+    const uriUsername = encodeURI(this.username);
+
+    return {
+      subject: `acct:${uriUsername}@${toASCII(host)}`,
+      links: [
+        {
+          rel: 'self',
+          type: 'application/activity+json',
+          href: `${origin}/@${uriUsername}`,
+        }
+      ]
     };
   }
 

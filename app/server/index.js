@@ -24,6 +24,7 @@ const createClientForEnvironment = process.env.REDIS ?
 
 const server = new Server({
   console,
+  host: process.env.HOST,
   origin: process.env.ORIGIN,
   pg: new Pool,
   redis: {

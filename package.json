@@ -26,6 +26,7 @@
     "extract-text-webpack-plugin": "^3.0.2",
     "oauth2orize": "^1.11.0",
     "pg": "^7.4.1",
+    "punycode": "^2.1.0",
     "redis": "^2.8.0",
     "sapper": "file:../sapper/sapper-0.10.5.tgz",
     "svelte": "^1.57.3",

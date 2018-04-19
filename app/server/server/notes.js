@@ -28,11 +28,11 @@ export default {
     note.id = rows[0].id;
   },
 
-  async selectRecentNotesByUsername(username) {
+  async selectRecentNotesByLowerUsername(lowerUsername) {
     const { rows } = await this.pg.query({
-      name: 'selectRecentNotesByUsername',
-      text: 'SELECT notes.* FROM notes JOIN users ON notes.attributed_to_id = users.id WHERE users.username = $1 ORDER BY notes.id DESC',
-      values: [username]
+      name: 'selectRecentNotesByLowerUsername',
+      text: 'SELECT notes.* FROM notes JOIN users ON notes.attributed_to_id = users.id WHERE lower(users.username) = $1 ORDER BY notes.id DESC',
+      values: [lowerUsername]
     });
 
     return rows.map(row => new Note(row));

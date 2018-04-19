@@ -64,11 +64,11 @@ export default {
   selectUserByAccessToken: selectByForeignUserId,
   selectUserByRefreshToken: selectByForeignUserId,
 
-  async selectUserByUsername(username) {
+  async selectUserByLowerUsername(lowerUsername) {
     const { rows } = await this.pg.query({
-      name: 'selectUserByUsername',
-      text: 'SELECT * FROM users WHERE username = $1',
-      values: [username]
+      name: 'selectUserByLowerUsername',
+      text: 'SELECT * FROM users WHERE lower(username) = $1',
+      values: [lowerUsername]
     });
 
     return new User(rows[0]);

@@ -14,6 +14,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { toUnicode } from 'punycode';
 import AccessTokens from './access_tokens';
 import Follows from './follows';
 import Listener from './listener';
@@ -22,10 +23,11 @@ import RefreshTokens from './refresh_tokens';
 import Subscribers from './subscribers';
 import Users from './users';
 
-export default function Server({ console, origin, pg, redis }) {
+export default function Server({ console, host, origin, pg, redis }) {
   this.console = console;
   this.listeners = Object.create(null);
-  this.origin = origin;
+  this.host = toUnicode(host);
+  this.origin = origin || 'https://' + host;
   this.pg = pg;
   this.redis = redis;
 
