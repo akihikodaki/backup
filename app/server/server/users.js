@@ -45,10 +45,20 @@ export default {
   },
 
   insertIntoInboxes: promisify(function(users, item, callback) {
+    const activityStreams = JSON.stringify(item.toActivityStreams());
+
     this.redis
-        .batch(users.map(
-           user => ['zadd', `inbox:${user.id}`, item.id, item.id]))
-        .exec(callback);
+        .publisher
+        .batch(users.map(user => [
+           'zadd',
+           `inbox:${user.id}`,
+           item.id,
+           item.id
+        ]).concat(users.map(user => [
+          'publish',
+          this.getInboxChannel(user),
+          activityStreams
+        ]))).exec(callback);
   }),
 
   selectUserByAccessToken: selectByForeignUserId,
@@ -72,5 +82,9 @@ export default {
     });
 
     return rows.map(row => new User(row));
+  },
+
+  getInboxChannel({ id }) {
+    return `inbox:${id}:streaming`;
   }
 };

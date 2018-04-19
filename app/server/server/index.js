@@ -19,15 +19,24 @@ import Follows from './follows';
 import Listener from './listener';
 import Notes from './notes';
 import RefreshTokens from './refresh_tokens';
+import Subscribers from './subscribers';
 import Users from './users';
 
 export default function Server({ console, origin, pg, redis }) {
   this.console = console;
+  this.listeners = Object.create(null);
   this.origin = origin;
   this.pg = pg;
   this.redis = redis;
 
-  redis.on('error', console.error);
+  redis.publisher.on('error', console.error);
+  redis.subscriber.on('error', console.error);
+
+  redis.subscriber.on('message', (channel, message) => {
+    for (const listen of this.listeners[channel]) {
+      listen(channel, message);
+    }
+  });
 };
 
 Object.assign(
@@ -37,4 +46,5 @@ Object.assign(
   Listener,
   Notes,
   RefreshTokens,
+  Subscribers,
   Users);

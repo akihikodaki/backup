@@ -29,16 +29,17 @@ function createKey(digest) {
 export default {
   insertAccessToken: promisify(function(token, callback) {
     const buffer = Buffer.allocUnsafe(token.secret.byteLength + 4);
+    const key = createKey(token.digest);
 
     buffer.writeInt32BE(token.user.id, 0);
     token.secret.copy(buffer, 4);
 
-    this.redis.setex(createKey(token.digest), 1048576, buffer, callback);
+    this.redis.publisher.setex(key, 1048576, buffer, callback);
   }),
 
   selectAccessTokenByDigest(digest) {
     return new Promise((resolve, reject) => {
-      this.redis.get(createKey(digest), (error, string) => {
+      this.redis.publisher.get(createKey(digest), (error, string) => {
         if (error) {
           reject(error);
         } else {

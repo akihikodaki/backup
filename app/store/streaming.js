@@ -22,8 +22,11 @@ export default {
       const { type, orderedItems } = JSON.parse(data);
 
       if (type == 'OrderedCollection') {
+        const user = this.get('user');
         this.set({
-          user: Object.assign({}, this.get('user'), { inbox: orderedItems })
+          user: Object.assign({}, user, {
+            inbox: orderedItems.reverse().concat(user.inbox)
+          })
         });
       }
     };

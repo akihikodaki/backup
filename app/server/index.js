@@ -18,13 +18,18 @@ import { Pool } from 'pg';
 import { createClient } from 'redis';
 import Server from './server';
 
+const createClientForEnvironment = process.env.REDIS ?
+  () => createClient(process.env.REDIS, { detect_buffers: true }) :
+  () => createClient({ detect_buffers: true });
+
 const server = new Server({
   console,
   origin: process.env.ORIGIN,
   pg: new Pool,
-  redis: process.env.REDIS ?
-    createClient(process.env.REDIS, { detect_buffers: true }) :
-    createClient({ detect_buffers: true })
+  redis: {
+    publisher: createClientForEnvironment(),
+    subscriber: createClientForEnvironment()
+  }
 });
 
 server.listen(process.env.PORT);

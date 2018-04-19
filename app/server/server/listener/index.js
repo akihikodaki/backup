@@ -16,9 +16,9 @@
 
 import { createServer } from 'http';
 import sapper from 'sapper';
-import { routes } from '../../manifest/server.js';
-import Store from '../../store';
-import Streaming from './streaming';
+import { routes } from '../../../manifest/server.js';
+import Store from '../../../store';
+import createStreaming from './streaming';
 const express = require('express');
 
 export default {
@@ -26,7 +26,7 @@ export default {
     const application = express();
     const server = createServer(application);
 
-    Streaming.create.call(this, server);
+    createStreaming.call(this, server);
 
     application.use(
       express.static('assets'),
