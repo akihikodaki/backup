@@ -14,16 +14,14 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('users', {
+exports.up = (db, callback) => db.createTable('persons', {
   id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  salt: { type: 'bytea', notNull: true },
   username: { type: 'string', notNull: true },
-  password: { type: 'bytea', notNull: true },
 }, error => {
   if (error) {
     callback(error);
   } else {
-    db.runSql('CREATE UNIQUE INDEX users_username ON users ((lower(username)))', callback);
+    db.runSql('CREATE UNIQUE INDEX persons_username ON persons ((lower(username)))', callback);
   }
 });
 

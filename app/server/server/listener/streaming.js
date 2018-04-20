@@ -28,9 +28,9 @@ export default function(server) {
         parseAuthorization(req) ||
           new URLSearchParams(/\?.*/.exec(req.url)[0]).get('access_token');
 
-      authenticate(this, token).then(user => {
-        req.user = user;
-        done(user);
+      authenticate(this, token).then(account => {
+        req.account = account;
+        done(account);
       }, error => {
         this.console.error(error);
         done()
@@ -38,14 +38,14 @@ export default function(server) {
     },
   });
 
-  webSocketServer.on('connection', (connection, { user }) => {
-    this.selectRecentNotesFromInbox(user).then(async notes => {
+  webSocketServer.on('connection', (connection, { account }) => {
+    this.selectRecentNotesFromInbox(account).then(async notes => {
       const initialCollection = new OrderedCollection({
         orderedItems: notes.reverse()
       });
 
       const initialActivityStreams = initialCollection.toActivityStreams(this);
-      const subscribedChannel = this.getInboxChannel(user);
+      const subscribedChannel = this.getInboxChannel(account);
 
       initialActivityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
       connection.send(JSON.stringify(initialActivityStreams));

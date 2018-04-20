@@ -18,10 +18,11 @@ import { toUnicode } from 'punycode';
 import AccessTokens from './access_tokens';
 import Follows from './follows';
 import Listener from './listener';
+import LocalAccounts from './local_accounts';
 import Notes from './notes';
+import Persons from './persons';
 import RefreshTokens from './refresh_tokens';
 import Subscribers from './subscribers';
-import Users from './users';
 
 export default function Server({ console, host, origin, pg, redis }) {
   this.console = console;
@@ -46,7 +47,8 @@ Object.assign(
   AccessTokens,
   Follows,
   Listener,
+  LocalAccounts,
   Notes,
+  Persons,
   RefreshTokens,
-  Subscribers,
-  Users);
+  Subscribers);

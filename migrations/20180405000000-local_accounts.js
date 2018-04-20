@@ -14,22 +14,22 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export async function get(request, response, next) {
-  const accepted = request.accepts([
-    'html',
-    'application/activity+json',
-    'application/ld+json'
-  ]);
+exports.up = (db, callback) => db.createTable('local_accounts', {
+  person_id: {
+    type: 'int',
+    primaryKey: true,
+    notNull: true,
+    foreignKey: {
+      name: 'person_id',
+      table: 'persons',
+      // local_accounts should not be deleted as it contains precious private
+      // keys.
+      rules: { onDelete: 'RESTRICT', onUpdate: 'CASCADE' },
+      mapping: 'id',
+    }
+  },
+  salt: { type: 'bytea', notNull: true },
+  password: { type: 'bytea', notNull: true },
+}, callback);
 
-  if (!['application/activity+json', 'application/ld+json'].includes(accepted)) {
-    next();
-    return;
-  }
-
-  const { params: { username }, server } = request;
-  const person = await server.selectPersonByLowerUsername(username.toLowerCase());
-  const activityStreams = person.toActivityStreams(server);
-
-  activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
-  return response.json(activityStreams);
-}
+exports._meta = { version: 1 };

@@ -14,31 +14,32 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import RefreshToken from '../models/refresh_token';
+import Person from '../models/person';
 
 export default {
-  async insertRefreshToken(token) {
+  async selectPersonByLocalAccount(account) {
+    if (account.person) {
+      return account.person;
+    }
+
     const { rows } = await this.pg.query({
-      name: 'insertRefreshToken',
-      text: 'INSERT INTO refresh_tokens (person_id, secret, digest) VALUES ($1, $2, $3) RETURNING id',
-      values: [token.personId, token.secret, token.digest]
+      name: 'selectPersonByLowerUsername',
+      text: 'SELECT * FROM persons WHERE id = $1',
+      values: [lowerUsername]
     });
 
-    token.id = rows[0].id;
-  },
+    rows[0].account = account;
 
-  async selectRefreshTokenById(id) {
-    const { rows: [{ person_id, secret, digest }] } = await this.pg.query({
-      name: 'selectRefreshTokenById',
-      text: 'SELECT * FROM refresh_tokens WHERE id = $1',
-      values: [id]
+    return new Person(rows[0]);
+  }
+
+  async selectPersonByLowerUsername(lowerUsername) {
+    const { rows } = await this.pg.query({
+      name: 'selectPersonByLowerUsername',
+      text: 'SELECT * FROM persons WHERE lower(username) = $1',
+      values: [lowerUsername]
     });
 
-    return new RefreshToken({
-      id,
-      personId: person_id,
-      secret,
-      digest
-    });
+    return new Person(rows[0]);
   }
 };

@@ -16,12 +16,12 @@
 
 exports.up = (db, callback) => db.createTable('refresh_tokens', {
   id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  user_id: {
+  person_id: {
     type: 'int',
     notNull: true,
     foreignKey: {
-      name: 'user_id',
-      table: 'users',
+      name: 'person_id',
+      table: 'persons',
       rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
       mapping: 'id',
     }

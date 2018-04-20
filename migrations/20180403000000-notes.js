@@ -21,7 +21,7 @@ exports.up = (db, callback) => db.createTable('notes', {
     notNull: true,
     foreignKey: {
       name: 'attributed_to_id',
-      table: 'users',
+      table: 'persons',
       rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
       mapping: 'id',
     }

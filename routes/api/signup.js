@@ -15,7 +15,7 @@
 */
 
 import { urlencoded } from 'express';
-import User from '../../app/server/models/user';
+import LocalAccount from '../../app/server/models/local_account';
 import { issue } from '../../app/server/oauth/server';
 
 const urlencodedMiddleware = urlencoded({ extended: false });
@@ -24,9 +24,9 @@ export function post(request, response) {
   urlencodedMiddleware(request, response, () => {
     const { body, server } = request;
 
-    User.create(body.username, body.password).then(async user => {
-      await server.insertUser(user);
-      const { accessToken, refreshToken } = await issue(server, user);
+    LocalAccount.create(body.username, body.password).then(async account => {
+      await server.insertLocalAccount(account);
+      const { accessToken, refreshToken } = await issue(server, account);
 
       return {
         token_type: 'Bearer',

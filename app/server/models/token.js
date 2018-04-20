@@ -30,9 +30,9 @@ function digest(secret, data) {
 }
 
 export default class {
-  constructor({ user, userId, secret, digest }) {
-    this.user = user;
-    this.userId = userId;
+  constructor({ account, personId, secret, digest }) {
+    this.account = account;
+    this.personId = personId;
     this.secret = secret;
     this.digest = digest;
   }
@@ -41,10 +41,10 @@ export default class {
     return timingSafeEqual(digest(this.secret, clientSecret), this.digest);
   }
 
-  static create(user, secret, clientSecret) {
+  static create(account, secret, clientSecret) {
     return new this({
-      user,
-      userId: user.id,
+      account,
+      personId: account.personId,
       secret,
       digest: digest(secret, clientSecret)
     });

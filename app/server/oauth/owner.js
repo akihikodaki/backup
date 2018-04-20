@@ -26,7 +26,7 @@ export async function authenticate(server, token) {
     return null;
   }
 
-  return server.selectUserByAccessToken(accessToken);
+  return server.selectLocalAccountByAccessToken(accessToken);
 }
 
 export function parseAuthorization({ headers: { authorization } }) {
@@ -41,9 +41,9 @@ export function middleware(request, response, next) {
   const token = parseAuthorization(request);
 
   if (token) {
-    authenticate(request.server, token).then(user => {
-      if (user) {
-        request.user = user;
+    authenticate(request.server, token).then(account => {
+      if (account) {
+        request.account = account;
         next();
       } else {
         response.append('WWW-Authenticate', 'Bearer error="invalid_token",error_description="The access token provided is expired, revoked, malformed, or invalid for other reasons.",error_uri="https://tools.ietf.org/html/rfc6750#section-3.1"');

@@ -22,7 +22,7 @@ import RefreshToken from '../models/refresh_token';
 
 const promisifiedRandomBytes = promisify(randomBytes);
 
-export async function issue(server, user) {
+export async function issue(server, account) {
   const buffer = await promisifiedRandomBytes(512);
   const accessTokenServerSecret = buffer.slice(0, 128);
   const accessTokenClientSecret = buffer.slice(128, 256);
@@ -30,12 +30,12 @@ export async function issue(server, user) {
   const refreshTokenClientSecret = buffer.slice(384, 512);
 
   const accessToken = AccessToken.create(
-    user,
+    account,
     accessTokenServerSecret,
     accessTokenClientSecret);
 
   const refreshToken = RefreshToken.create(
-    user,
+    account,
     refreshTokenServerSecret,
     refreshTokenClientSecret);
 
@@ -50,14 +50,14 @@ export async function issue(server, user) {
   };
 }
 
-export async function refresh(server, user) {
+export async function refresh(server, account) {
   const buffer = await promisifiedRandomBytes(512);
 
   const accessTokenServerSecret = buffer.slice(0, 128);
   const accessTokenClientSecret = buffer.slice(128, 256);
 
   const accessToken = AccessToken.create(
-    user, accessTokenServerSecret, accessTokenClientSecret);
+    account, accessTokenServerSecret, accessTokenClientSecret);
 
   await server.insertAccessToken(accessToken);
 
@@ -71,14 +71,15 @@ export function createServer(server) {
     async (client, username, password, scope, done) => {
       try {
         const lowerUsername = username.toLowerCase();
-        const user = await server.selectUserByLowerUsername(lowerUsername);
+        const account =
+          await server.selectLocalAccountByLowerUsername(lowerUsername);
 
-        if (!await user.authenticate(password)) {
+        if (!await account.authenticate(password)) {
           done();
           return;
         }
 
-        const { accessToken, refreshToken } = await issue(server, user);
+        const { accessToken, refreshToken } = await issue(server, account);
 
         done(null, accessToken, refreshToken);
       } catch (error) {
@@ -98,9 +99,10 @@ export function createServer(server) {
           return;
         }
 
-        const user = await server.selectUserByRefreshToken(refreshToken);
+        const account =
+          await server.selectLocalAccountByRefreshToken(refreshToken);
 
-        done(null, await refresh(server, user));
+        done(null, await refresh(server, account));
       } catch (error) {
         server.console.dir(error);
         done(error);

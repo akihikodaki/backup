@@ -39,7 +39,10 @@ export function get({ params, server }, response, next) {
 export function post(request, response, next) {
   oauthOwner(request, response, () => middleware(request, response, async () => {
     try {
-      if (request.params.username !== request.user.username) {
+      const person =
+        await request.server.selectPersonByLocalAccount(request.account);
+
+      if (request.params.username !== person.username) {
         response.sendStatus(401);
         return;
       }
@@ -56,7 +59,7 @@ export function post(request, response, next) {
       switch (request.body.type) {
       case 'Follow':
         const follow = await Follow.fromActivityStreams(
-          request.server, request.user, request.body);
+          request.server, person, request.body);
 
         if (follow) {
           await request.server.insertFollow(follow);
@@ -66,9 +69,9 @@ export function post(request, response, next) {
         break;
 
       case 'Note':
-        const note = Note.fromActivityStreams(request.user, request.body);
+        const note = Note.fromActivityStreams(request.person, request.body);
         const [followers] = await Promise.all([
-          request.server.selectUsersByFollowee(request.user),
+          request.server.selectLocalAccountsByFollowee(request.person),
           request.server.insertNote(note)
         ]);
 

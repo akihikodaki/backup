@@ -34,7 +34,7 @@ export default class {
       return null;
     }
 
-    return this.create(actor, await server.selectUserByLowerUsername(
+    return this.create(actor, await server.selectPersonByLowerUsername(
       object.slice(localUserPrefix.length).toLowerCase()));
   }
 };

@@ -21,7 +21,7 @@ exports.up = (db, callback) => db.createTable('follows', {
     notNull: true,
     foreignKey: {
       name: 'actor_id',
-      table: 'users',
+      table: 'persons',
       rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
       mapping: 'id',
     }
@@ -31,7 +31,7 @@ exports.up = (db, callback) => db.createTable('follows', {
     notNull: true,
     foreignKey: {
       name: 'object_id',
-      table: 'users',
+      table: 'persons',
       rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
       mapping: 'id',
     }

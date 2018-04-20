@@ -31,17 +31,17 @@ export default {
   async selectRecentNotesByLowerUsername(lowerUsername) {
     const { rows } = await this.pg.query({
       name: 'selectRecentNotesByLowerUsername',
-      text: 'SELECT notes.* FROM notes JOIN users ON notes.attributed_to_id = users.id WHERE lower(users.username) = $1 ORDER BY notes.id DESC',
+      text: 'SELECT notes.* FROM notes JOIN persons ON notes.attributed_to_id = persons.id WHERE lower(persons.username) = $1 ORDER BY notes.id DESC',
       values: [lowerUsername]
     });
 
     return rows.map(row => new Note(row));
   },
  
-  async selectRecentNotesFromInbox(user) {
+  async selectRecentNotesFromInbox(account) {
     const { publisher } = this.redis;
     const promisifiedZrevrange = promisify(publisher.zrevrange.bind(publisher));
-    const ids = await promisifiedZrevrange(`inbox:${user.id}`, 0, -1);
+    const ids = await promisifiedZrevrange(`inbox:${account.personId}`, 0, -1);
     const { rows } = await this.pg.query({
       name: 'selectRecentNotesFromInbox',
       text: 'SELECT notes.* FROM notes WHERE id = ANY(string_to_array($1, \',\')::integer[])',

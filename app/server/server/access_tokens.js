@@ -31,7 +31,7 @@ export default {
     const buffer = Buffer.allocUnsafe(token.secret.byteLength + 4);
     const key = createKey(token.digest);
 
-    buffer.writeInt32BE(token.user.id, 0);
+    buffer.writeInt32BE(token.personId, 0);
     token.secret.copy(buffer, 4);
 
     this.redis.publisher.setex(key, 1048576, buffer, callback);
@@ -47,7 +47,7 @@ export default {
 
           resolve(new AccessToken({
             digest,
-            userId: buffer.readInt32BE(0),
+            personId: buffer.readInt32BE(0),
             secret: buffer.slice(4)
           }));
         }

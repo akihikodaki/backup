@@ -14,22 +14,12 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export async function get(request, response, next) {
-  const accepted = request.accepts([
-    'html',
-    'application/activity+json',
-    'application/ld+json'
-  ]);
-
-  if (!['application/activity+json', 'application/ld+json'].includes(accepted)) {
-    next();
-    return;
-  }
-
-  const { params: { username }, server } = request;
-  const person = await server.selectPersonByLowerUsername(username.toLowerCase());
-  const activityStreams = person.toActivityStreams(server);
-
-  activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
-  return response.json(activityStreams);
-}
+exports.up = (db, callback) => db.runSql(`CREATE FUNCTION insert_local_account(username TEXT, salt BYTEA, password BYTEA)
+RETURNS INTEGER AS $$
+  DECLARE person_id INTEGER;
+  BEGIN
+    INSERT INTO persons (username) VALUES ($1) RETURNING id INTO person_id;
+    INSERT INTO local_accounts(salt, password) VALUES ($2, $3);
+    RETURN person_id;
+  END
+$$ LANGUAGE plpgsql`, callback);

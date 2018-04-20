@@ -41,39 +41,15 @@ const hashPassword = promisify((rawPassword, salt, callback) => {
 });
 
 export default class {
-  constructor({ id, salt, username, password }) {
-    this.id = id;
+  constructor({ person, personId, salt, password }) {
+    if (person) {
+      person.account = this;
+      this.person = person;
+    }
+
+    this.personId = person.id || personId;
     this.salt = salt;
-    this.username = username;
     this.password = password;
-  }
-
-  toActivityStreams({ origin }) {
-    const id = `${origin}/@${encodeURI(this.username)}`;
-
-    return {
-      id,
-      type: 'Person',
-      preferredUsername: this.username,
-      oauthTokenEndpoint: `${origin}/oauth/token`,
-      inbox: id + '/inbox',
-      outbox: id + '/outbox'
-    };
-  }
-
-  toWebFinger({ host, origin }) {
-    const uriUsername = encodeURI(this.username);
-
-    return {
-      subject: `acct:${uriUsername}@${toASCII(host)}`,
-      links: [
-        {
-          rel: 'self',
-          type: 'application/activity+json',
-          href: `${origin}/@${uriUsername}`,
-        }
-      ]
-    };
   }
 
   async authenticate(rawPassword) {
@@ -85,6 +61,6 @@ export default class {
     const salt = await promisifiedRandomBytes(128);
     const password = await hashPassword(rawPassword, salt);
 
-    return new this({ salt, username, password });
+    return new this({ person: new Person({ username }), salt, password });
   }
 };
