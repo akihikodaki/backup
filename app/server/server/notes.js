@@ -29,14 +29,10 @@ export default {
   },
 
   async selectRecentNotesByLowerUsernameAndHost(lowerUsername, lowerHost) {
-    const { rows } =  await this.pg.query(lowerHost ? {
-      name: 'selectRecentNotesByLowerUsername.remote',
-      text: 'SELECT notes.* FROM notes JOIN persons ON notes.attributed_to_id = persons.id JOIN remote_accounts ON remote_accounts.person_id = notes.attributed_to_id WHERE lower(persons.username) = $1 AND lower(remote_accounts.host) = $2 ORDER BY notes.id DESC',
-      values: [lowerUsername, lowerHost]
-    } : {
-      name: 'selectRecentNotesByLowerUsername.local',
-      text: 'SELECT notes.* FROM notes JOIN persons ON notes.attributed_to_id = persons.id WHERE lower(persons.username) = $1 ORDER BY notes.id DESC',
-      values: [lowerUsername]
+    const { rows } =  await this.pg.query({
+      name: 'selectRecentNotesByLowerUsername',
+      text: 'SELECT notes.* FROM notes JOIN persons ON notes.attributed_to_id = persons.id WHERE lower(persons.username) = $1 AND lower(persons.host) = $2 ORDER BY notes.id DESC',
+      values: [lowerUsername, lowerHost || '']
     });
 
     return rows.map(row => new Note(row));

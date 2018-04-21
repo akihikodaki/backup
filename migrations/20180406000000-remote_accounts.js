@@ -15,7 +15,8 @@
 */
 
 exports.up = (db, callback) => db.createTable('remote_accounts', {
-  host: { type: 'string', notNull: true },
+  key_id: { type: 'string', notNull: true, unique: true },
+  public_key_pem: { type: 'string', notNull: true },
   person_id: {
     type: 'int',
     notNull: true,
@@ -23,9 +24,7 @@ exports.up = (db, callback) => db.createTable('remote_accounts', {
     foreignKey: {
       name: 'person_id',
       table: 'persons',
-      // local_accounts should not be deleted as it contains precious private
-      // keys.
-      rules: { onDelete: 'RESTRICT', onUpdate: 'CASCADE' },
+      rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
       mapping: 'id',
     }
   },

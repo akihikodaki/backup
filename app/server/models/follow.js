@@ -30,7 +30,7 @@ export default class {
   static async fromActivityStreams(server, actor, { object }) {
     const localUserPrefix = server.origin + '/@';
 
-    if (typeof object !== 'string' || !object.startsWith(localUserPrefix)) {
+    if (typeof object != 'string' || !object.startsWith(localUserPrefix)) {
       return null;
     }
 

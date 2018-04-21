@@ -16,12 +16,13 @@
 
 exports.up = (db, callback) => db.createTable('persons', {
   id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  username: { type: 'string', notNull: true }
+  username: { type: 'string', notNull: true },
+  host: { type: 'string', notNull: true },
 }, error => {
   if (error) {
     callback(error);
   } else {
-    db.runSql('CREATE UNIQUE INDEX persons_username ON persons ((lower(username)))', callback);
+    db.runSql('CREATE UNIQUE INDEX persons_acct ON persons (lower(host), lower(username))', callback);
   }
 });
 

@@ -29,7 +29,7 @@
       const refreshToken =
         localStorage.getItem(this.store.get('refreshTokenKey'));
 
-      if (refreshToken !== null) {
+      if (refreshToken != null) {
         const username = localStorage.getItem(this.store.get('usernameKey'));
 
         this.store.oauth(fetch, username, {

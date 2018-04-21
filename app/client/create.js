@@ -26,7 +26,7 @@ export default node => init(node, routes, {
       const refreshToken =
         localStorage.getItem(store.get('refreshTokenKey'));
 
-      if (refreshToken !== null) {
+      if (refreshToken) {
         const username = localStorage.getItem(store.get('usernameKey'));
 
         store.oauth(fetch, username, {

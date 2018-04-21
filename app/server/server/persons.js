@@ -21,15 +21,13 @@ async function selectByAccount(account) {
     return account.person;
   }
 
-  const { rows } = await this.pg.query({
+  const { rows: [ { username, host } ] } = await this.pg.query({
     name: 'persons.selectByAccount',
     text: 'SELECT * FROM persons WHERE id = $1',
     values: [lowerUsername]
   });
 
-  rows[0].account = account;
-
-  return new Person(rows[0]);
+  return new Person({ account, username, host: host || null });
 }
 
 export default {

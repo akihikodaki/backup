@@ -30,7 +30,7 @@ exports.up = (db, callback) => db.createTable('local_accounts', {
       mapping: 'id',
     }
   },
-  key_pair_pem: { type: 'string', notNull: true },
+  private_key_pem: { type: 'string', notNull: true },
   salt: { type: 'bytea', notNull: true },
   password: { type: 'bytea', notNull: true }
 }, callback);

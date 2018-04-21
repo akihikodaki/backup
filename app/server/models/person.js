@@ -27,7 +27,7 @@ const webFinger = new WebFinger;
 const lookup = promisify(webFinger.lookup.bind(webFinger));
 
 export default class {
-  constructor({ account, id, username }) {
+  constructor({ account, id, username, host }) {
     if (account) {
       account.person = this;
       account.personId = id;
@@ -36,37 +36,13 @@ export default class {
 
     this.id = id;
     this.username = username;
+    this.host = host;
   }
 
   async toActivityStreams(server) {
-    let account = this.account;
-
-    if (!account) {
-      account = await server.selectLocalAccountByPerson(this);
-      if (!account) {
-        account = await server.selectRemoteAccountByPerson(this);
-      }
-    }
-
-    if (account instanceof LocalAccount) {
-      const id = `${server.origin}/@${encodeURI(this.username)}`;
-
-      return {
-        id,
-        type: 'Person',
-        preferredUsername: this.username,
-        oauthTokenEndpoint: `${server.origin}/oauth/token`,
-        inbox: id + '/inbox',
-        outbox: id + '/outbox',
-        publicKey: {
-          type: 'Key',
-          publicKeyPem: extractPublic(account.keyPairPem)
-        }
-      };
-    }
-
-    if (account instanceof RemoteAccount) {
-      const id = `${server.origin}/@${encodeURI(`${this.username}@${this.account.host}`)}`;
+    if (this.host) {
+      const acct = encodeURI(`${this.username}@${this.host}`);
+      const id = `${server.origin}/@${acct}`;
 
       return {
         id,
@@ -76,14 +52,37 @@ export default class {
         outbox: id + '/outbox'
       };
     }
+
+    const account = await server.selectLocalAccountByPerson(this);
+    const id = `${server.origin}/@${encodeURI(this.username)}`;
+
+    return {
+      id,
+      type: 'Person',
+      preferredUsername: this.username,
+      oauthTokenEndpoint: `${server.origin}/oauth/token`,
+      inbox: id + '/inbox',
+      outbox: id + '/outbox',
+      publicKey: {
+        type: 'Key',
+        publicKeyPem: extractPublic(account.privateKeyPem)
+      }
+    };
   }
 
   static create(username) {
-    return new this({ username });
+    return new this({ username, host: null });
   }
 
-  static fromActivityStreams({ preferredUsername: username }) {
-    return new this({ account: new RemoteAccount({ }), username });
+  static fromActivityStreams({ id, publicKey, preferredUsername: username }) {
+    const idUrl = new URL(id);
+    const publicKeyIdUrl = new URL(publicKey.id);
+
+    if (idUrl.host.toLowerCase() != publicKeyIdUrl.host.toLowerCase()) {
+      throw new Error;
+    }
+
+    return new this({ account: new RemoteAccount({ publicKey }), username });
   }
 
   static async resolve(server, acct) {
@@ -132,7 +131,7 @@ export default class {
       }
 
       const person = this.fromActivityStreams(activityStreams);
-      person.account.host = host;
+      person.host = host;
       await server.insertRemoteAccount(person.account);
 
       return person;

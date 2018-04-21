@@ -20,7 +20,7 @@
 {{/if}}
 <ol>
   {{#each person.outbox.orderedItems as item}}
-    {{#if item.type === 'Note'}}
+    {{#if item.type == 'Note'}}
       <li>{{item.text}}</li>
     {{/if}}
   {{/each}}
@@ -31,9 +31,8 @@
       const personResponse =
         await this.store.fetchPerson(this.fetch, params.acct);
 
-      if (personResponse.status === 200) {
+      if (personResponse.status == 200) {
         const person = await personResponse.json();
-        console.log(person);
         await this.store.fetchOutbox(this.fetch, person);
         return { person };
       }

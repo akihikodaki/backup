@@ -43,7 +43,7 @@ const hashPassword = promisify((rawPassword, salt, callback) => {
 });
 
 export default class {
-  constructor({ person, personId, keyPairPem, salt, password }) {
+  constructor({ person, personId, privateKeyPem, salt, password }) {
     if (person) {
       person.account = this;
       this.person = person;
@@ -52,7 +52,7 @@ export default class {
       this.personId = personId;
     }
 
-    this.keyPairPem = keyPairPem;
+    this.privateKeyPem = privateKeyPem;
     this.salt = salt;
     this.password = password;
   }
@@ -84,7 +84,7 @@ export default class {
 
     return new this({
       person: new Person({ username }),
-      keyPairPem: generate(),
+      privateKeyPem: generate(),
       salt,
       password
     });

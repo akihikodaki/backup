@@ -45,7 +45,7 @@ export default {
       text: 'SELECT insert_local_account($1, $2, $3, $4)',
       values: [
         account.person.username,
-        account.keyPairPem,
+        account.privateKeyPem,
         account.salt,
         account.password
       ]
@@ -86,24 +86,24 @@ export default {
 
     return rows.map(({
       person_id: personId,
-      key_pair_pem: keyPairPem,
+      private_key_pem: privateKeyPem,
       salt,
       password
-    }) => new LocalAccount({ personId, keyPairPem, salt, password }));
+    }) => new LocalAccount({ personId, privateKeyPem, salt, password }));
   },
 
   async selectLocalAccountByLowerUsername(lowerUsername) {
     const {
-      rows: [ { person_id, person_username, key_pair_pem, salt, password } ]
+      rows: [ { person_id, person_username, private_key_pem, salt, password } ]
     } = await this.pg.query({
         name: 'selectLocalAccountByLowerUsername',
-        text: 'SELECT local_accounts.*, persons.username AS person_username FROM local_accounts JOIN persons ON local_accounts.person_id = persons.id WHERE lower(persons.username) = $1',
+        text: 'SELECT local_accounts.*, persons.username AS person_username FROM local_accounts JOIN persons ON local_accounts.person_id = persons.id WHERE lower(persons.username) = $1 AND lower(persons.host) = \'\'',
         values: [lowerUsername]
       });
 
     return new LocalAccount({
       person: new Person({ id: person_id, username: person_username }),
-      keyPairPem: key_pair_pem,
+      privateKeyPem: private_key_pem,
       salt,
       password
     });

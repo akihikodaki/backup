@@ -21,8 +21,13 @@ export default {
   async insertRemoteAccount(account) {
     const { rows: [ { id } ] } = await this.pg.query({
       name: 'insertRemoteAccount',
-      text: 'SELECT insert_remote_account($1, $2)',
-      values: [account.person.username, account.host]
+      text: 'SELECT insert_remote_account($1, $2, $3, $4)',
+      values: [
+        account.person.username,
+        account.person.host,
+        account.publicKey.id,
+        account.publicKey.publicKeyPem
+      ]
     });
 
     account.person.id = id;
@@ -32,26 +37,17 @@ export default {
   async selectRemoteAccountByLowerUsernameAndHost(lowerUsername, lowerHost) {
     const { rows } = await this.pg.query({
       name: 'selectRemoteAccountByLowerUsernameAndHost',
-      text: 'SELECT remote_accounts.*, persons.username AS person_username FROM remote_accounts JOIN persons ON remote_accounts.person_id = persons.id WHERE lower(persons.username) = $1 AND lower(remote_accounts.host) = $2',
+      text: 'SELECT remote_accounts.*, persons.username AS person_username, persons.host AS person_host FROM remote_accounts JOIN persons ON remote_accounts.person_id = persons.id WHERE lower(persons.username) = $1 AND lower(persons.host) = $2',
       values: [lowerUsername, lowerHost]
     });
 
     return rows[0] ? new RemoteAccount({
       person: new Person({
         id: rows[0].person_id,
-        username: rows[0].person_username
+        username: rows[0].person_username,
+        host: rows[0].person_host || null
        }),
-      host: rows[0].host,
+      publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
     }) : null;
-  },
-
-  async selectRemoteAccountByPerson({ id }) {
-    const { rows: [ { person_id: personId, host } ] } = await this.pg.query({
-      name: 'selectRemoteAccountByPerson',
-      text: 'SELECT * FROM remote_accounts WHERE person_id = $1',
-      values: [id]
-    });
-
-    return new RemoteAccount({ personId, host });
   }
 };
