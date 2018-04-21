@@ -16,7 +16,7 @@
 
 exports.up = (db, callback) => db.createTable('persons', {
   id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
-  username: { type: 'string', notNull: true },
+  username: { type: 'string', notNull: true }
 }, error => {
   if (error) {
     callback(error);

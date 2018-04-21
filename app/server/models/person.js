@@ -18,6 +18,7 @@ import { get } from 'https';
 import { toASCII, toUnicode } from 'punycode';
 import { URL } from 'url';
 import { promisify } from 'util';
+import { extractPublic } from '../../../build/Release/key';
 import LocalAccount from './local_account';
 import RemoteAccount from './remote_account';
 const WebFinger = require('webfinger.js');
@@ -56,7 +57,11 @@ export default class {
         preferredUsername: this.username,
         oauthTokenEndpoint: `${server.origin}/oauth/token`,
         inbox: id + '/inbox',
-        outbox: id + '/outbox'
+        outbox: id + '/outbox',
+        publicKey: {
+          type: 'Key',
+          publicKeyPem: extractPublic(account.keyPairPem)
+        }
       };
     }
 
@@ -84,9 +89,9 @@ export default class {
   static async resolve(server, acct) {
     const [encodedUserpart, encodedHost] = acct.toLowerCase().split('@', 2);
     const userpart = decodeURI(encodedUserpart);
-    const host = toUnicode(encodedHost);
 
-    if (host) {
+    if (encodedHost) {
+      const host = encodedHost && toUnicode(encodedHost);
       const account =
         await server.selectRemoteAccountByLowerUsernameAndHost(userpart, host);
 

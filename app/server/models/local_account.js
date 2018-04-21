@@ -17,6 +17,8 @@
 import { pbkdf2, randomBytes, timingSafeEqual } from 'crypto';
 import { toASCII } from 'punycode';
 import { promisify } from 'util';
+import { generate } from '../../../build/Release/key';
+import Person from './person';
 
 const promisifiedRandomBytes = promisify(randomBytes);
 
@@ -41,7 +43,7 @@ const hashPassword = promisify((rawPassword, salt, callback) => {
 });
 
 export default class {
-  constructor({ person, personId, salt, password }) {
+  constructor({ person, personId, keyPairPem, salt, password }) {
     if (person) {
       person.account = this;
       this.person = person;
@@ -50,6 +52,7 @@ export default class {
       this.personId = personId;
     }
 
+    this.keyPairPem = keyPairPem;
     this.salt = salt;
     this.password = password;
   }
@@ -79,6 +82,11 @@ export default class {
     const salt = await promisifiedRandomBytes(128);
     const password = await hashPassword(rawPassword, salt);
 
-    return new this({ person: new Person({ username }), salt, password });
+    return new this({
+      person: new Person({ username }),
+      keyPairPem: generate(),
+      salt,
+      password
+    });
   }
 };

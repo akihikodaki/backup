@@ -22,14 +22,17 @@ exports.up = (db, callback) => db.createTable('local_accounts', {
     foreignKey: {
       name: 'person_id',
       table: 'persons',
+
       // local_accounts should not be deleted as it contains precious private
       // keys.
       rules: { onDelete: 'RESTRICT', onUpdate: 'CASCADE' },
+
       mapping: 'id',
     }
   },
+  key_pair_pem: { type: 'string', notNull: true },
   salt: { type: 'bytea', notNull: true },
-  password: { type: 'bytea', notNull: true },
+  password: { type: 'bytea', notNull: true }
 }, callback);
 
 exports._meta = { version: 1 };

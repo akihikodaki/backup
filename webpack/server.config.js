@@ -22,7 +22,7 @@ module.exports = {
   output: server.output(),
   externals: Object.keys(dependencies),
   mode: process.env.NODE_ENV,
-  resolve: { extensions: ['.js', '.html'] },
+  resolve: { extensions: ['.html', '.js', '.node'] },
   target: 'node',
   module: {
     rules: [
@@ -38,6 +38,9 @@ module.exports = {
             generate: 'ssr'
           }
         }
+      }, {
+        test: /\.node$/,
+        use: 'node-loader'
       }
     ]
   }

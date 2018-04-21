@@ -40,14 +40,19 @@ export default {
   },
 
   async insertLocalAccount(account) {
-    const { rows: [ { id } ] } = await this.pg.query({
+    const { rows: [ { insert_local_account } ] } = await this.pg.query({
       name: 'insertLocalAccount',
-      text: 'SELECT insert_local_account($1, $2, $3)',
-      values: [account.person.username, account.salt, account.password]
+      text: 'SELECT insert_local_account($1, $2, $3, $4)',
+      values: [
+        account.person.username,
+        account.keyPairPem,
+        account.salt,
+        account.password
+      ]
     });
 
-    account.person.id = id;
-    account.personId = id;
+    account.person.id = insert_local_account;
+    account.personId = insert_local_account;
   },
 
   async insertIntoInboxes(accounts, item, callback) {
@@ -79,18 +84,26 @@ export default {
       values: [id]
     });
 
-    return rows.map(row => new LocalAccount(row));
+    return rows.map(({
+      person_id: personId,
+      key_pair_pem: keyPairPem,
+      salt,
+      password
+    }) => new LocalAccount({ personId, keyPairPem, salt, password }));
   },
 
   async selectLocalAccountByLowerUsername(lowerUsername) {
-    const { rows } = await this.pg.query({
-      name: 'selectLocalAccountByLowerUsername',
-      text: 'SELECT local_accounts.*, persons.username AS person_username FROM local_accounts JOIN persons ON local_accounts.person_id = persons.id WHERE lower(persons.username) = $1',
-      values: [lowerUsername]
-    });
+    const {
+      rows: [ { person_id, person_username, key_pair_pem, salt, password } ]
+    } = await this.pg.query({
+        name: 'selectLocalAccountByLowerUsername',
+        text: 'SELECT local_accounts.*, persons.username AS person_username FROM local_accounts JOIN persons ON local_accounts.person_id = persons.id WHERE lower(persons.username) = $1',
+        values: [lowerUsername]
+      });
 
     return new LocalAccount({
       person: new Person({ id: person_id, username: person_username }),
+      keyPairPem: key_pair_pem,
       salt,
       password
     });
