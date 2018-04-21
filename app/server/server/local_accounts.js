@@ -42,7 +42,7 @@ export default {
   async insertLocalAccount(account) {
     const { rows: [ { id } ] } = await this.pg.query({
       name: 'insertLocalAccount',
-      text: 'SELECT insert_local_accounts ($1, $2, $3)',
+      text: 'SELECT insert_local_account($1, $2, $3)',
       values: [account.person.username, account.salt, account.password]
     });
 
@@ -50,22 +50,24 @@ export default {
     account.personId = id;
   },
 
-  insertIntoInboxes: promisify(function(accounts, item, callback) {
-    const activityStreams = JSON.stringify(item.toActivityStreams());
+  async insertIntoInboxes(accounts, item, callback) {
+    const activityStreams = JSON.stringify(await item.toActivityStreams());
 
-    this.redis
-        .publisher
-        .batch(accounts.map(({ id }) => [
-           'zadd',
-           `inbox:${id}`,
-           item.id,
-           item.id
-        ]).concat(accounts.map(account => [
-          'publish',
-          this.getInboxChannel(account),
-          activityStreams
-        ]))).exec(callback);
-  }),
+    const batch = this.redis
+                      .publisher
+                      .batch(accounts.map(account => [
+                        'zadd',
+                        `inbox:${account.id}`,
+                        item.id,
+                        item.id
+                      ]).concat(accounts.map(account => [
+                        'publish',
+                        this.getInboxChannel(account),
+                        activityStreams
+                      ])));
+
+    return promisifiy(batch.exec.bind(batch));
+  },
 
   selectLocalAccountByAccessToken: selectByForeignPersonId,
   selectLocalAccountByRefreshToken: selectByForeignPersonId,

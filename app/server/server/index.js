@@ -19,6 +19,7 @@ import AccessTokens from './access_tokens';
 import Follows from './follows';
 import Listener from './listener';
 import LocalAccounts from './local_accounts';
+import RemoteAccounts from './remote_accounts';
 import Notes from './notes';
 import Persons from './persons';
 import RefreshTokens from './refresh_tokens';
@@ -48,6 +49,7 @@ Object.assign(
   Follows,
   Listener,
   LocalAccounts,
+  RemoteAccounts,
   Notes,
   Persons,
   RefreshTokens,

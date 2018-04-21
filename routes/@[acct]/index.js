@@ -14,6 +14,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import Person from '../../app/server/models/person';
+
 export async function get(request, response, next) {
   const accepted = request.accepts([
     'html',
@@ -26,9 +28,9 @@ export async function get(request, response, next) {
     return;
   }
 
-  const { params: { username }, server } = request;
-  const person = await server.selectPersonByLowerUsername(username.toLowerCase());
-  const activityStreams = person.toActivityStreams(server);
+  const { params: { acct }, server } = request;
+  const person = await Person.resolve(server, acct);
+  const activityStreams = await person.toActivityStreams(server);
 
   activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
   return response.json(activityStreams);

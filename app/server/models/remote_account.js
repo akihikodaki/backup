@@ -15,22 +15,15 @@
 */
 
 export default class {
-  constructor({ id, attributedTo, attributedToId, text }) {
-    this.id = id;
-    this.attributedTo = attributedTo;
-    this.attributedToId = attributedToId;
-    this.text = text;
-  }
+  constructor({ host, person, personId }) {
+    if (person) {
+      person.account = this;
+      this.person = person;
+      this.personId = person.id;
+    } else {
+      this.personId = personId;
+    }
 
-  async toActivityStreams() {
-    return { type: 'Note', text: this.text };
+    this.host = host;
   }
-
-  static create(attributedTo, text) {
-    return new this({ attributedTo, attributedToId: attributedTo.id, text });
-  }
-
-  static fromActivityStreams(attributedTo, { text }) {
-    return this.create(attributedTo, text);
-  }
-};
+}

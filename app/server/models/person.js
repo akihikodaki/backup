@@ -14,6 +14,17 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { get } from 'https';
+import { toASCII, toUnicode } from 'punycode';
+import { URL } from 'url';
+import { promisify } from 'util';
+import LocalAccount from './local_account';
+import RemoteAccount from './remote_account';
+const WebFinger = require('webfinger.js');
+
+const webFinger = new WebFinger;
+const lookup = promisify(webFinger.lookup.bind(webFinger));
+
 export default class {
   constructor({ account, id, username }) {
     if (account) {
@@ -26,35 +37,103 @@ export default class {
     this.username = username;
   }
 
-  toActivityStreams({ origin }) {
-    const id = `${origin}/@${encodeURI(this.username)}`;
+  async toActivityStreams(server) {
+    let account = this.account;
 
-    return {
-      id,
-      type: 'Person',
-      preferredUsername: this.username,
-      oauthTokenEndpoint: `${origin}/oauth/token`,
-      inbox: id + '/inbox',
-      outbox: id + '/outbox'
-    };
-  }
+    if (!account) {
+      account = await server.selectLocalAccountByPerson(this);
+      if (!account) {
+        account = await server.selectRemoteAccountByPerson(this);
+      }
+    }
 
-  toWebFinger({ host, origin }) {
-    const uriUsername = encodeURI(this.username);
+    if (account instanceof LocalAccount) {
+      const id = `${server.origin}/@${encodeURI(this.username)}`;
 
-    return {
-      subject: `acct:${uriUsername}@${toASCII(host)}`,
-      links: [
-        {
-          rel: 'self',
-          type: 'application/activity+json',
-          href: `${origin}/@${uriUsername}`,
-        }
-      ]
-    };
+      return {
+        id,
+        type: 'Person',
+        preferredUsername: this.username,
+        oauthTokenEndpoint: `${server.origin}/oauth/token`,
+        inbox: id + '/inbox',
+        outbox: id + '/outbox'
+      };
+    }
+
+    if (account instanceof RemoteAccount) {
+      const id = `${server.origin}/@${encodeURI(`${this.username}@${this.account.host}`)}`;
+
+      return {
+        id,
+        type: 'Person',
+        preferredUsername: this.username,
+        inbox: id + '/inbox',
+        outbox: id + '/outbox'
+      };
+    }
   }
 
   static create(username) {
     return new this({ username });
+  }
+
+  static fromActivityStreams({ preferredUsername: username }) {
+    return new this({ account: new RemoteAccount({ }), username });
+  }
+
+  static async resolve(server, acct) {
+    const [encodedUserpart, encodedHost] = acct.toLowerCase().split('@', 2);
+    const userpart = decodeURI(encodedUserpart);
+    const host = toUnicode(encodedHost);
+
+    if (host) {
+      const account =
+        await server.selectRemoteAccountByLowerUsernameAndHost(userpart, host);
+
+      if (account) {
+        return server.selectPersonByRemoteAccount(account);
+      }
+
+      const firstFinger = await lookup(acct);
+      const { href } =
+        firstFinger.object.links.find(({ rel }) => rel == 'self');
+      const secondFinger = await lookup(href);
+      const url = new URL(href);
+      let json = '';
+
+      if (firstFinger.subject != secondFinger.subject) {
+        throw new Error;
+      }
+
+      await new Promise((resolve, reject) => get({
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname + url.search,
+        headers: { Accept: 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"' }
+      }, response => {
+        response.on('data', chunk => json += chunk);
+        response.on('end', resolve);
+      }).on('error', reject));
+
+      const activityStreams = JSON.parse(json);
+      const context = activityStreams['@context'];
+
+      if ((Array.isArray(context) ?
+            !context.includes('https://www.w3.org/ns/activitystreams') :
+            context != 'https://www.w3.org/ns/activitystreams') ||
+          activityStreams.type != 'Person') {
+        throw new Error;
+      }
+
+      const person = this.fromActivityStreams(activityStreams);
+      person.account.host = host;
+      await server.insertRemoteAccount(person.account);
+
+      return person;
+    }
+
+    const account = await server.selectLocalAccountByLowerUsername(userpart);
+    return server.selectPersonByLocalAccount(account);
   }
 }

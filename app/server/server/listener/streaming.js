@@ -44,7 +44,9 @@ export default function(server) {
         orderedItems: notes.reverse()
       });
 
-      const initialActivityStreams = initialCollection.toActivityStreams(this);
+      const initialActivityStreams =
+        await initialCollection.toActivityStreams(this);
+
       const subscribedChannel = this.getInboxChannel(account);
 
       initialActivityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';

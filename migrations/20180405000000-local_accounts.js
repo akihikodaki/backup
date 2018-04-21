@@ -17,8 +17,8 @@
 exports.up = (db, callback) => db.createTable('local_accounts', {
   person_id: {
     type: 'int',
-    primaryKey: true,
     notNull: true,
+    primaryKey: true,
     foreignKey: {
       name: 'person_id',
       table: 'persons',

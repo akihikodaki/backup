@@ -45,11 +45,29 @@ export default class {
     if (person) {
       person.account = this;
       this.person = person;
+      this.personId = person.id;
+    } else {
+      this.personId = personId;
     }
 
-    this.personId = person.id || personId;
     this.salt = salt;
     this.password = password;
+  }
+
+  async toWebFinger(server) {
+    const { username } = await server.selectPersonByLocalAccount(this);
+    const uriUsername = encodeURI(username);
+
+    return {
+      subject: `acct:${uriUsername}@${toASCII(server.host)}`,
+      links: [
+        {
+          rel: 'self',
+          type: 'application/activity+json',
+          href: `${server.origin}/@${uriUsername}`,
+        }
+      ]
+    };
   }
 
   async authenticate(rawPassword) {

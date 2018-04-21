@@ -14,23 +14,21 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default class {
-  constructor({ id, attributedTo, attributedToId, text }) {
-    this.id = id;
-    this.attributedTo = attributedTo;
-    this.attributedToId = attributedToId;
-    this.text = text;
-  }
+exports.up = (db, callback) => db.createTable('remote_accounts', {
+  host: { type: 'string', notNull: true },
+  person_id: {
+    type: 'int',
+    notNull: true,
+    primaryKey: true,
+    foreignKey: {
+      name: 'person_id',
+      table: 'persons',
+      // local_accounts should not be deleted as it contains precious private
+      // keys.
+      rules: { onDelete: 'RESTRICT', onUpdate: 'CASCADE' },
+      mapping: 'id',
+    }
+  },
+}, callback);
 
-  async toActivityStreams() {
-    return { type: 'Note', text: this.text };
-  }
-
-  static create(attributedTo, text) {
-    return new this({ attributedTo, attributedToId: attributedTo.id, text });
-  }
-
-  static fromActivityStreams(attributedTo, { text }) {
-    return this.create(attributedTo, text);
-  }
-};
+exports._meta = { version: 1 };

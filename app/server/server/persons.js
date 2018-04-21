@@ -16,30 +16,23 @@
 
 import Person from '../models/person';
 
+async function selectByAccount(account) {
+  if (account.person) {
+    return account.person;
+  }
+
+  const { rows } = await this.pg.query({
+    name: 'persons.selectByAccount',
+    text: 'SELECT * FROM persons WHERE id = $1',
+    values: [lowerUsername]
+  });
+
+  rows[0].account = account;
+
+  return new Person(rows[0]);
+}
+
 export default {
-  async selectPersonByLocalAccount(account) {
-    if (account.person) {
-      return account.person;
-    }
-
-    const { rows } = await this.pg.query({
-      name: 'selectPersonByLowerUsername',
-      text: 'SELECT * FROM persons WHERE id = $1',
-      values: [lowerUsername]
-    });
-
-    rows[0].account = account;
-
-    return new Person(rows[0]);
-  }
-
-  async selectPersonByLowerUsername(lowerUsername) {
-    const { rows } = await this.pg.query({
-      name: 'selectPersonByLowerUsername',
-      text: 'SELECT * FROM persons WHERE lower(username) = $1',
-      values: [lowerUsername]
-    });
-
-    return new Person(rows[0]);
-  }
+  selectPersonByLocalAccount: selectByAccount,
+  selectPersonByRemoteAccount: selectByAccount
 };

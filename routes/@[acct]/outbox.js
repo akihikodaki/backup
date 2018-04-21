@@ -25,15 +25,16 @@ const middleware = json({
 });
 
 export function get({ params, server }, response, next) {
-  const lowerUsername = params.username.toLowerCase();
+  const [userpart, host] = params.acct.toLowerCase().split('@', 2);
 
-  server.selectRecentNotesByLowerUsername(lowerUsername).then(orderedItems => {
-    const collection = new OrderedCollection({ orderedItems });
-    const activityStreams = collection.toActivityStreams(server);
+  server.selectRecentNotesByLowerUsernameAndHost(userpart, host).then(
+    async orderedItems => {
+      const collection = new OrderedCollection({ orderedItems });
+      const activityStreams = await collection.toActivityStreams(server);
 
-    activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
-    response.json(activityStreams);
-  }).catch(next);
+      activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
+      response.json(activityStreams);
+    }).catch(next);
 }
 
 export function post(request, response, next) {
@@ -42,7 +43,7 @@ export function post(request, response, next) {
       const person =
         await request.server.selectPersonByLocalAccount(request.account);
 
-      if (request.params.username !== person.username) {
+      if (request.params.acct !== person.username) {
         response.sendStatus(401);
         return;
       }

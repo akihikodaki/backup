@@ -19,11 +19,11 @@ export default class {
     this.orderedItems = orderedItems;
   }
 
-  toActivityStreams(server) {
+  async toActivityStreams(server) {
     return {
       type: 'OrderedCollection',
-      orderedItems:
-        this.orderedItems.map(item => item.toActivityStreams(server))
+      orderedItems: await Promise.all(this.orderedItems.map(
+        item => item.toActivityStreams(server)))
     };
   }
 };

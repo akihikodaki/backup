@@ -30,8 +30,8 @@ export default {
     return fetched;
   },
 
-  async fetchPerson(fetch, username) {
-    return fetch('/@' + username, {
+  async fetchPerson(fetch, acct) {
+    return fetch('/@' + acct, {
       headers: { Accept: 'application/activity+json;q=0.9,application/ld+json;q=0.8' }
     });
   },

@@ -29,10 +29,11 @@
   export default {
     async preload({ params }) {
       const personResponse =
-        await this.store.fetchPerson(this.fetch, params.username);
+        await this.store.fetchPerson(this.fetch, params.acct);
 
       if (personResponse.status === 200) {
         const person = await personResponse.json();
+        console.log(person);
         await this.store.fetchOutbox(this.fetch, person);
         return { person };
       }

@@ -25,8 +25,10 @@ export function get({ query, server }, response) {
     return;
   }
 
-  server.selectUserByLowerUsername(decodeURI(userpart)).then(user => {
-    response.json(user.toWebFinger(server));
+  const username = decodeURI(userpart);
+
+  server.selectLocalAccountByLowerUsername(username).then(async account => {
+    response.json(await account.toWebFinger(server));
   }).catch(error => {
     console.error(error);
     response.sendStatus(500);

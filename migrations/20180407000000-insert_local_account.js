@@ -14,23 +14,12 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default class {
-  constructor({ id, attributedTo, attributedToId, text }) {
-    this.id = id;
-    this.attributedTo = attributedTo;
-    this.attributedToId = attributedToId;
-    this.text = text;
-  }
-
-  async toActivityStreams() {
-    return { type: 'Note', text: this.text };
-  }
-
-  static create(attributedTo, text) {
-    return new this({ attributedTo, attributedToId: attributedTo.id, text });
-  }
-
-  static fromActivityStreams(attributedTo, { text }) {
-    return this.create(attributedTo, text);
-  }
-};
+exports.up = (db, callback) => db.runSql(`CREATE FUNCTION insert_local_account(username TEXT, salt BYTEA, password BYTEA)
+RETURNS INTEGER AS $$
+  DECLARE person_id INTEGER;
+  BEGIN
+    INSERT INTO persons (username) VALUES ($1) RETURNING id INTO person_id;
+    INSERT INTO local_accounts(person_id, salt, password) VALUES (person_id, $2, $3);
+    RETURN person_id;
+  END
+$$ LANGUAGE plpgsql`, callback);

@@ -31,6 +31,7 @@
     "sapper": "file:../sapper/sapper-0.10.5.tgz",
     "svelte": "^1.57.3",
     "svelte-loader": "^2.3.3",
+    "webfinger.js": "^2.6.6",
     "webpack": "^4.1.0",
     "ws": "^5.1.1"
   }
