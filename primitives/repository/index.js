@@ -17,7 +17,6 @@
 import { toUnicode } from 'punycode';
 import AccessTokens from './access_tokens';
 import Follows from './follows';
-import Listener from './listener';
 import LocalAccounts from './local_accounts';
 import RemoteAccounts from './remote_accounts';
 import Notes from './notes';
@@ -25,7 +24,7 @@ import Persons from './persons';
 import RefreshTokens from './refresh_tokens';
 import Subscribers from './subscribers';
 
-export default function Server({ console, host, origin, pg, redis }) {
+export default function Repository({ console, host, origin, pg, redis }) {
   this.console = console;
   this.listeners = Object.create(null);
   this.host = toUnicode(host);
@@ -44,10 +43,9 @@ export default function Server({ console, host, origin, pg, redis }) {
 };
 
 Object.assign(
-  Server.prototype,
+  Repository.prototype,
   AccessTokens,
   Follows,
-  Listener,
   LocalAccounts,
   RemoteAccounts,
   Notes,

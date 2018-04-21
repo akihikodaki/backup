@@ -16,13 +16,14 @@
 
 import { Pool } from 'pg';
 import { createClient } from 'redis';
-import Server from './server';
+import Processor from '../primitives/processor';
+import Repository from '../primitives/repository';
 
 const createClientForEnvironment = process.env.REDIS ?
   () => createClient(process.env.REDIS, { detect_buffers: true }) :
   () => createClient({ detect_buffers: true });
 
-const server = new Server({
+const repository = new Repository({
   console,
   host: process.env.HOST,
   origin: process.env.ORIGIN,
@@ -33,4 +34,4 @@ const server = new Server({
   }
 });
 
-server.listen(process.env.PORT);
+Processor.process(repository);

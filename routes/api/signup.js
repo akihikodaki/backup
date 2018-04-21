@@ -15,18 +15,19 @@
 */
 
 import { urlencoded } from 'express';
-import LocalAccount from '../../app/server/models/local_account';
-import { issue } from '../../app/server/oauth/server';
+import LocalAccount from '../../primitives/local_account';
+import OauthServer from '../../primitives/oauth/server';
 
 const urlencodedMiddleware = urlencoded({ extended: false });
 
 export function post(request, response) {
   urlencodedMiddleware(request, response, () => {
-    const { body, server } = request;
+    const { body, repository } = request;
 
     LocalAccount.create(body.username, body.password).then(async account => {
-      await server.insertLocalAccount(account);
-      const { accessToken, refreshToken } = await issue(server, account);
+      await repository.insertLocalAccount(account);
+      const { accessToken, refreshToken } =
+        await OauthServer.issue(repository, account);
 
       return {
         token_type: 'Bearer',

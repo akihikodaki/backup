@@ -15,12 +15,12 @@
 */
 
 import { urlencoded } from 'express';
-import { createServer } from '../../app/server/oauth/server';
+import OauthServer from '../../primitives/oauth/server';
 
 const urlencodedMiddleware = urlencoded({ extended: false });
 
 export function post(request, response, next) {
-  const server = createServer(request.server);
+  const server = OauthServer.create(request.repository);
 
   urlencodedMiddleware(request, response,
     () => server.token()(request, response,

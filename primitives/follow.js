@@ -27,16 +27,18 @@ export default class {
     return new this({ actor, actorId: actor.id, object, objectId: object.id });
   }
 
-  static async fromActivityStreams(server, actor, { object }) {
-    const localUserPrefix = server.origin + '/@';
+  static async fromActivityStreams(repository, actor, { object }) {
+    const localUserPrefix = repository.origin + '/@';
 
     if (typeof object != 'string' || !object.startsWith(localUserPrefix)) {
       return null;
     }
 
-    const account = await server.selectLocalAccountByLowerUsername(
+    const account = await repository.selectLocalAccountByLowerUsername(
       object.slice(localUserPrefix.length).toLowerCase());
 
-    return this.create(actor, await server.selectPersonByLocalAccount(account));
+    const person = await repository.selectPersonByLocalAccount(account);
+
+    return this.create(actor, person);
   }
 };

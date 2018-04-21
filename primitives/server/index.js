@@ -16,22 +16,22 @@
 
 import { createServer } from 'http';
 import sapper from 'sapper';
-import { routes } from '../../../manifest/server.js';
-import Store from '../../../store';
+import { routes } from '../../app/manifest/server';
+import Store from '../store';
 import createStreaming from './streaming';
 const express = require('express');
 
 export default {
-  listen(port) {
+  serve(repository, port) {
     const application = express();
     const server = createServer(application);
 
-    createStreaming.call(this, server);
+    createStreaming(repository, server);
 
     application.use(
       express.static('assets'),
       (request, response, next) => {
-        request.server = this;
+        request.repository = repository;
         next();
       },
       sapper({
@@ -47,7 +47,7 @@ export default {
         }
       }));
 
-    server.listen(port).on('error', this.console.error);
+    server.listen(port).on('error', repository.console.error);
 
     return server;
   }

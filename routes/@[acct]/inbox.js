@@ -16,25 +16,25 @@
 
 import { json } from 'express';
 import { parseRequest, verifySignature } from 'http-signature';
-import act from '../../app/server/act';
+import Activity from '../../primitives/activity';
 
 const middleware = json({
   type: ['application/activity+json', 'application/ld+json']
 });
 
 export function post(request, response, next) {
-  const { headers, server } = request;
+  const { headers, repository } = request;
   headers.authorization = 'Signature ' + headers.signature;
   const signature = parseRequest(request);
 
-  server.selectRemoteAccountByKeyId(signature.keyId).then(account => {
+  repository.selectRemoteAccountByKeyId(signature.keyId).then(account => {
     if (!verifySignature(signature, account.publicKey.publicKeyPem)) {
       return response.sendStatus(401);
     }
 
     middleware(request, response, () => {
-      server.selectPersonByRemoteAccount(account).then(person => {
-        return act(server, person, request.body);
+      repository.selectPersonByRemoteAccount(account).then(person => {
+        return Activity.act(repository, person, request.body);
       }).then(() => response.sendStatus(201), next);
     });
   }).catch(next);

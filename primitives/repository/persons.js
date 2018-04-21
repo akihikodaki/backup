@@ -14,7 +14,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Person from '../models/person';
+import Person from '../person';
 
 async function selectByAccount(account) {
   if (account.person) {

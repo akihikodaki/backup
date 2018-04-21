@@ -15,21 +15,21 @@
 */
 
 import { json } from 'express';
-import act from '../../app/server/act';
-import OrderedCollection from '../../app/server/models/ordered_collection';
-import { middleware as oauthOwner } from '../../app/server/oauth/owner';
+import Activity from '../../primitives/activity';
+import OrderedCollection from '../../primitives/ordered_collection';
+import OauthOwner from '../../primitives/oauth/owner';
 
 const middleware = json({
   type: ['application/activity+json', 'application/ld+json']
 });
 
-export function get({ params, server }, response, next) {
+export function get({ params, repository }, response, next) {
   const [userpart, host] = params.acct.toLowerCase().split('@', 2);
 
-  server.selectRecentNotesByLowerUsernameAndHost(userpart, host).then(
+  repository.selectRecentNotesByLowerUsernameAndHost(userpart, host).then(
     async orderedItems => {
       const collection = new OrderedCollection({ orderedItems });
-      const activityStreams = await collection.toActivityStreams(server);
+      const activityStreams = await collection.toActivityStreams(repository);
 
       activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
       response.json(activityStreams);
@@ -37,14 +37,18 @@ export function get({ params, server }, response, next) {
 }
 
 export function post(request, response, next) {
-  oauthOwner(request, response, () => middleware(request, response, () => {
-    server.selectPersonByLocalAccount(request.account).then(async person => {
-      if (request.params.acct == person.username) {
-        await act(request.server, person, request.body);
-        response.sendStatus(201);
-      } else {
-        response.sendStatus(401);
-      }
-    }).catch(next);
-  }));
+  OauthOwner.middleware(request, response, () => {
+    middleware(request, response, () => {
+      const { account, repository } = request;
+
+      repository.selectPersonByLocalAccount(account).then(async person => {
+        if (request.params.acct == person.username) {
+          await Activity.act(repository, person, request.body);
+          response.sendStatus(201);
+        } else {
+          response.sendStatus(401);
+        }
+      }).catch(next);
+    });
+  });
 }

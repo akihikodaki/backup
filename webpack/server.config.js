@@ -14,11 +14,14 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+const { join } = require('path');
 const { server } = require('sapper/webpack/config');
 const { dependencies } = require('../package');
 
 module.exports = {
-  entry: server.entry(),
+  entry: Object.assign({
+    processor: join(__dirname, '../app/processor')
+  }, server.entry()),
   output: server.output(),
   externals: Object.keys(dependencies),
   mode: process.env.NODE_ENV,

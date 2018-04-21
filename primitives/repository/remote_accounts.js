@@ -14,8 +14,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Person from '../models/person';
-import RemoteAccount from '../models/remote_account';
+import Person from '../person';
+import RemoteAccount from '../remote_account';
 
 async function selectIncludingPerson(query) {
   const { rows } = await this.pg.query(query);

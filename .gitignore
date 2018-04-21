@@ -15,4 +15,5 @@
 .sapper
 app/manifest
 build
+key.node
 node_modules

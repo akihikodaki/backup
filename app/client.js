@@ -14,16 +14,10 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default class {
-  constructor({ orderedItems }) {
-    this.orderedItems = orderedItems;
-  }
+import Client from '../primitives/client';
 
-  async toActivityStreams(server) {
-    return {
-      type: 'OrderedCollection',
-      orderedItems: await Promise.all(this.orderedItems.map(
-        item => item.toActivityStreams(server)))
-    };
-  }
-};
+Client.init(document.getElementById('root'));
+
+if (module.hot) {
+  module.hot.accept();
+}

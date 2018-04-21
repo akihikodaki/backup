@@ -15,7 +15,7 @@
 */
 
 import { promisify } from 'util';
-import Note from '../models/note';
+import Note from '../note';
 
 export default {
   async insertNote(note) {

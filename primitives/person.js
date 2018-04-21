@@ -14,11 +14,11 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { get } from 'https';
+import { get } from 'http';
 import { toASCII, toUnicode } from 'punycode';
 import { URL } from 'url';
 import { promisify } from 'util';
-import { extractPublic } from '../../../build/Release/key';
+import { extractPublic } from '../key';
 import LocalAccount from './local_account';
 import RemoteAccount from './remote_account';
 const WebFinger = require('webfinger.js');
@@ -39,10 +39,10 @@ export default class {
     this.host = host;
   }
 
-  async toActivityStreams(server) {
+  async toActivityStreams(repository) {
     if (this.host) {
       const acct = encodeURI(`${this.username}@${this.host}`);
-      const id = `${server.origin}/@${acct}`;
+      const id = `${repository.origin}/@${acct}`;
 
       return {
         id,
@@ -53,14 +53,14 @@ export default class {
       };
     }
 
-    const account = await server.selectLocalAccountByPerson(this);
-    const id = `${server.origin}/@${encodeURI(this.username)}`;
+    const account = await repository.selectLocalAccountByPerson(this);
+    const id = `${repository.origin}/@${encodeURI(this.username)}`;
 
     return {
       id,
       type: 'Person',
       preferredUsername: this.username,
-      oauthTokenEndpoint: `${server.origin}/oauth/token`,
+      oauthTokenEndpoint: `${repository.origin}/oauth/token`,
       inbox: id + '/inbox',
       outbox: id + '/outbox',
       publicKey: {
@@ -85,17 +85,18 @@ export default class {
     return new this({ account: new RemoteAccount({ publicKey }), username });
   }
 
-  static async resolve(server, acct) {
+  static async resolve(repository, acct) {
     const [encodedUserpart, encodedHost] = acct.toLowerCase().split('@', 2);
     const userpart = decodeURI(encodedUserpart);
 
     if (encodedHost) {
       const host = encodedHost && toUnicode(encodedHost);
       const account =
-        await server.selectRemoteAccountByLowerUsernameAndHost(userpart, host);
+        await repository.selectRemoteAccountByLowerUsernameAndHost(
+          userpart, host);
 
       if (account) {
-        return server.selectPersonByRemoteAccount(account);
+        return repository.selectPersonByRemoteAccount(account);
       }
 
       const firstFinger = await lookup(acct);
@@ -132,12 +133,14 @@ export default class {
 
       const person = this.fromActivityStreams(activityStreams);
       person.host = host;
-      await server.insertRemoteAccount(person.account);
+      await repository.insertRemoteAccount(person.account);
 
       return person;
     }
 
-    const account = await server.selectLocalAccountByLowerUsername(userpart);
-    return server.selectPersonByLocalAccount(account);
+    const account =
+      await repository.selectLocalAccountByLowerUsername(userpart);
+
+    return repository.selectPersonByLocalAccount(account);
   }
 }

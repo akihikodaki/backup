@@ -16,47 +16,46 @@
 
 import { URLSearchParams } from 'url';
 import { Server as WebSocketServer } from 'ws';
-import OrderedCollection from '../../models/ordered_collection';
-import { authenticate, parseAuthorization } from '../../oauth/owner';
+import OrderedCollection from '../ordered_collection';
+import OauthOwner from '../oauth/owner';
 
-export default function(server) {
+export default function(repository, server) {
   const webSocketServer = new WebSocketServer({
     path: '/api/streaming',
     server,
     verifyClient: ({ req }, done) => {
       const token =
-        parseAuthorization(req) ||
+        OauthOwner.parseAuthorization(req) ||
           new URLSearchParams(/\?.*/.exec(req.url)[0]).get('access_token');
 
-      authenticate(this, token).then(account => {
+      OauthOwner.authenticate(repository, token).then(account => {
         req.account = account;
         done(account);
       }, error => {
-        this.console.error(error);
+        repository.console.error(error);
         done()
       });
     },
   });
 
   webSocketServer.on('connection', (connection, { account }) => {
-    this.selectRecentNotesFromInbox(account).then(async notes => {
+    repository.selectRecentNotesFromInbox(account).then(async notes => {
       const initialCollection = new OrderedCollection({
         orderedItems: notes.reverse()
       });
 
       const initialActivityStreams =
-        await initialCollection.toActivityStreams(this);
+        await initialCollection.toActivityStreams(repository);
 
-      const subscribedChannel = this.getInboxChannel(account);
+      const subscribedChannel = repository.getInboxChannel(account);
 
       initialActivityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
       connection.send(JSON.stringify(initialActivityStreams));
 
-      await this.subscribe(subscribedChannel, (publishedChannel, message) => {
-        connection.send(`{"@context":"https://www.w3.org/ns/activitystreams","type":"OrderedCollection","orderedItems":[${message}]}`);
-      });
+      await repository.subscribe(subscribedChannel,
+        (publishedChannel, message) => connection.send(`{"@context":"https://www.w3.org/ns/activitystreams","type":"OrderedCollection","orderedItems":[${message}]}`));
 
-      connection.on('close', () => this.unsubscribe(subscribedChannel));
+      connection.on('close', () => repository.unsubscribe(subscribedChannel));
     });
   });
 }

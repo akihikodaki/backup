@@ -16,19 +16,19 @@
 
 import { toUnicode } from 'punycode';
 
-export function get({ query, server }, response) {
+export function get({ query, repository }, response) {
   const lowerResource = query.resource.toLowerCase();
   const [, userpart, host] = /(?:acct:)?(.*)@(.*)/.exec(lowerResource);
 
-  if (toUnicode(host) != server.host.toLowerCase()) {
+  if (toUnicode(host) != repository.host.toLowerCase()) {
     response.sendStatus(404);
     return;
   }
 
   const username = decodeURI(userpart);
 
-  server.selectLocalAccountByLowerUsername(username).then(async account => {
-    response.json(await account.toWebFinger(server));
+  repository.selectLocalAccountByLowerUsername(username).then(async account => {
+    response.json(await account.toWebFinger(repository));
   }).catch(error => {
     console.error(error);
     response.sendStatus(500);

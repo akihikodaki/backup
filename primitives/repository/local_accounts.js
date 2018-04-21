@@ -15,8 +15,8 @@
 */
 
 import { promisify } from 'util';
-import LocalAccount from '../models/local_account';
-import Person from '../models/person';
+import LocalAccount from '../local_account';
+import Person from '../person';
 
 async function selectByPersonId(personId) {
   const { rows: [ { private_key_pem: privateKeyPem, salt, password } ] } =

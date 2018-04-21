@@ -14,10 +14,16 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import create from './create';
+export default class {
+  constructor({ orderedItems }) {
+    this.orderedItems = orderedItems;
+  }
 
-create(document.getElementById('root'));
-
-if (module.hot) {
-  module.hot.accept();
-}
+  async toActivityStreams(repository) {
+    return {
+      type: 'OrderedCollection',
+      orderedItems: await Promise.all(this.orderedItems.map(
+        item => item.toActivityStreams(repository)))
+    };
+  }
+};

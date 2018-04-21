@@ -17,7 +17,7 @@
 import { pbkdf2, randomBytes, timingSafeEqual } from 'crypto';
 import { toASCII } from 'punycode';
 import { promisify } from 'util';
-import { generate } from '../../../build/Release/key';
+import { generate } from '../key';
 import Person from './person';
 
 const promisifiedRandomBytes = promisify(randomBytes);
@@ -57,17 +57,17 @@ export default class {
     this.password = password;
   }
 
-  async toWebFinger(server) {
-    const { username } = await server.selectPersonByLocalAccount(this);
+  async toWebFinger(repository) {
+    const { username } = await repository.selectPersonByLocalAccount(this);
     const uriUsername = encodeURI(username);
 
     return {
-      subject: `acct:${uriUsername}@${toASCII(server.host)}`,
+      subject: `acct:${uriUsername}@${toASCII(repository.host)}`,
       links: [
         {
           rel: 'self',
           type: 'application/activity+json',
-          href: `${server.origin}/@${uriUsername}`,
+          href: `${repository.origin}/@${uriUsername}`,
         }
       ]
     };

@@ -14,7 +14,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import RefreshToken from '../models/refresh_token';
+import RefreshToken from '../refresh_token';
 
 export default {
   async insertRefreshToken(token) {
