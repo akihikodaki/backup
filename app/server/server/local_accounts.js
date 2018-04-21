@@ -18,18 +18,23 @@ import { promisify } from 'util';
 import LocalAccount from '../models/local_account';
 import Person from '../models/person';
 
+async function selectByPersonId(personId) {
+  const { rows: [ { private_key_pem: privateKeyPem, salt, password } ] } =
+    await this.pg.query({
+      name: 'local_accounts.selectByPersonId',
+      text: 'SELECT * FROM local_accounts WHERE person_id = $1',
+      values: [personId],
+    });
+
+  return new LocalAccount({ personId, privateKeyPem, salt, password });
+}
+
 async function selectByForeignPersonId(foreign) {
   if (foreign.account) {
     return foreign.account;
   }
 
-  const { rows } = await this.pg.query({
-    name: 'local_accounts.selectByForeignPersonId',
-    text: 'SELECT * FROM local_accounts WHERE person_id = $1',
-    values: [foreign.personId],
-  });
-
-  foreign.account = new LocalAccount(rows[0]);
+  foreign.account = await selectByPersonId.call(this, foreign.personId);
 
   return foreign.account;
 }
@@ -107,5 +112,18 @@ export default {
       salt,
       password
     });
+  },
+
+  async selectLocalAccountByPerson(person) {
+    if (person.account) {
+      return person.account;
+    }
+
+    const account = await selectByPersonId(person.id);
+
+    account.person = person;
+    person.account = account;
+
+    return account;
   }
 };

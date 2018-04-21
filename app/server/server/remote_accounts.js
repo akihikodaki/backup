@@ -17,6 +17,19 @@
 import Person from '../models/person';
 import RemoteAccount from '../models/remote_account';
 
+async function selectIncludingPerson(query) {
+  const { rows } = await this.pg.query(query);
+
+  return rows[0] ? new RemoteAccount({
+    person: new Person({
+      id: rows[0].person_id,
+      username: rows[0].person_username,
+      host: rows[0].person_host || null
+     }),
+    publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
+  }) : null;
+}
+
 export default {
   async insertRemoteAccount(account) {
     const { rows: [ { id } ] } = await this.pg.query({
@@ -34,20 +47,19 @@ export default {
     account.personId = id;
   },
 
-  async selectRemoteAccountByLowerUsernameAndHost(lowerUsername, lowerHost) {
-    const { rows } = await this.pg.query({
+  selectRemoteAccountByLowerUsernameAndHost(lowerUsername, lowerHost) {
+    return selectIncludingPerson.call(this, {
       name: 'selectRemoteAccountByLowerUsernameAndHost',
       text: 'SELECT remote_accounts.*, persons.username AS person_username, persons.host AS person_host FROM remote_accounts JOIN persons ON remote_accounts.person_id = persons.id WHERE lower(persons.username) = $1 AND lower(persons.host) = $2',
       values: [lowerUsername, lowerHost]
     });
+  },
 
-    return rows[0] ? new RemoteAccount({
-      person: new Person({
-        id: rows[0].person_id,
-        username: rows[0].person_username,
-        host: rows[0].person_host || null
-       }),
-      publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
-    }) : null;
+  selectRemoteAccountByKeyId(id) {
+    return selectIncludingPerson.call(this, {
+      name: 'selectRemoteAccountByKeyId',
+      text: 'SELECT remote_accounts.*, persons.username AS person_username, persons.host AS person_host FROM remote_accounts JOIN persons ON remote_accounts.person_id = persons.id WHERE remote_accounts.key_id = $1',
+      values: [id]
+    });
   }
 };
