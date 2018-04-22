@@ -105,7 +105,11 @@ export default {
       });
 
     return new LocalAccount({
-      person: new Person({ id: person_id, username: person_username }),
+      person: new Person({
+        id: person_id,
+        username: person_username,
+        host: null
+      }),
       privateKeyPem: private_key_pem,
       salt,
       password
@@ -121,6 +125,36 @@ export default {
 
     account.person = person;
     person.account = account;
+
+    return account;
+  },
+
+  async selectLocalAccountIncludingPersonByActorOfFollow(follow) {
+    if (follow.actor && follow.actor.account) {
+      return follow.actor.account instanceof LocalAccount ?
+        follow.actor.account : null;
+    }
+
+    const {
+      rows: [ { person_id, person_username, private_key_pem, salt, password } ]
+    } = await this.pg.query({
+      name: 'selectLocalAccountIncludingPersonByActorOfFollow',
+      text: 'SELECT local_accounts.*, persons.username AS person_username FROM local_accounts JOIN persons ON local_accounts.person_id = persons.id JOIN follow ON local_accounts.person_id = follow.actor_id WHERE follow.id = $1',
+      values: [follow.id]
+    });
+
+    const account = new LocalAccount({
+      person: new Person({
+        id: person_id,
+        username: person_username,
+        host: null
+      }),
+      privateKeyPem: private_key_pem,
+      salt,
+      password
+    });
+
+    follow.actor = account.person;
 
     return account;
   }

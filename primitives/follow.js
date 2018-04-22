@@ -14,6 +14,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import Accept from './accept';
+
 export default class {
   constructor({ actor, actorId, object, objectId }) {
     this.actor = actor;
@@ -24,7 +26,10 @@ export default class {
 
   static async create(repository, actor, object) {
     const follow = new this({ actor, object });
+
     await repository.insertFollow(follow);
+    await Accept.create(follow);
+
     return follow;
   }
 

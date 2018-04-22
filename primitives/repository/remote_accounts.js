@@ -61,5 +61,22 @@ export default {
       text: 'SELECT remote_accounts.*, persons.username AS person_username, persons.host AS person_host FROM remote_accounts JOIN persons ON remote_accounts.person_id = persons.id WHERE remote_accounts.key_id = $1',
       values: [id]
     });
+  },
+
+  async selectRemoteAccountByObjectOfFollow(follow) {
+    if (follow.object && follow.object.account) {
+      return follow.object.account instanceof RemoteAccount ?
+        follow.object.account : null;
+    }
+
+    const { rows } = await this.pg.query({
+      name: 'selectRemoteAccountByObjectOfFollow',
+      text: 'SELECT remote_accounts.* FROM follows JOIN remote_accounts ON follows.object_id = remote_accounts.person_id WHERE follow.id = $1',
+      values: [follow.id]
+    });
+
+    return new RemoteAccount({
+      publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
+    });
   }
 };

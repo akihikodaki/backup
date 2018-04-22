@@ -21,6 +21,7 @@ import { promisify } from 'util';
 import { extractPublic } from '../key';
 import LocalAccount from './local_account';
 import RemoteAccount from './remote_account';
+import URI from './uri';
 const WebFinger = require('webfinger.js');
 
 const webFinger = new WebFinger({ tls_only: false });
@@ -69,7 +70,7 @@ export default class {
 
   async toActivityStreams(repository) {
     if (this.host) {
-      const acct = encodeURI(`${this.username}@${this.host}`);
+      const acct = URI.encodeSegment(`${this.username}@${this.host}`);
       const id = `${repository.origin}/@${acct}`;
 
       return {
@@ -82,7 +83,7 @@ export default class {
     }
 
     const account = await repository.selectLocalAccountByPerson(this);
-    const id = `${repository.origin}/@${encodeURI(this.username)}`;
+    const id = `${repository.origin}/@${URI.encodeSegment(this.username)}`;
 
     return {
       id,

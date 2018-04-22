@@ -19,6 +19,7 @@ import { toASCII } from 'punycode';
 import { promisify } from 'util';
 import { generate } from '../key';
 import Person from './person';
+import URI from './uri';
 
 const promisifiedRandomBytes = promisify(randomBytes);
 
@@ -59,10 +60,10 @@ export default class {
 
   async toWebFinger(repository) {
     const { username } = await repository.selectPersonByLocalAccount(this);
-    const uriUsername = encodeURI(username);
+    const uriUsername = URI.encodeSegment(username);
 
     return {
-      subject: `acct:${uriUsername}@${toASCII(repository.host)}`,
+      subject: `acct:${uriUsername.replace(/:/g, '%3A').replace(/@/g, '%40')}@${toASCII(repository.host)}`,
       links: [
         {
           rel: 'self',
