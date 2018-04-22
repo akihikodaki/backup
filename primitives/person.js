@@ -23,8 +23,36 @@ import LocalAccount from './local_account';
 import RemoteAccount from './remote_account';
 const WebFinger = require('webfinger.js');
 
-const webFinger = new WebFinger;
+const webFinger = new WebFinger({ tls_only: false });
 const lookup = promisify(webFinger.lookup.bind(webFinger));
+
+async function getActivityStreams(href) {
+  const { protocol, hostname, port, pathname, search } = new URL(href);
+  let json = '';
+
+  await new Promise((resolve, reject) => get({
+    protocol,
+    hostname,
+    port,
+    path: pathname + search,
+    headers: { Accept: 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"' }
+  }, response => {
+    response.on('data', chunk => json += chunk);
+    response.on('end', resolve);
+  }).on('error', reject));
+
+  const activityStreams = JSON.parse(json);
+  const context = activityStreams['@context'];
+
+  if ((Array.isArray(context) ?
+        !context.includes('https://www.w3.org/ns/activitystreams') :
+        context != 'https://www.w3.org/ns/activitystreams') ||
+        activityStreams.type != 'Person') {
+    throw new Error;
+  }
+
+  return activityStreams;
+}
 
 export default class {
   constructor({ account, id, username, host }) {
@@ -85,7 +113,7 @@ export default class {
     return person;
   }
 
-  static async resolve(repository, acct) {
+  static async resolveByAcct(repository, acct) {
     const [encodedUserpart, encodedHost] = acct.toLowerCase().split('@', 2);
     const userpart = decodeURI(encodedUserpart);
 
@@ -102,35 +130,14 @@ export default class {
       const firstFinger = await lookup(acct);
       const { href } =
         firstFinger.object.links.find(({ rel }) => rel == 'self');
+      const asyncActivityStreams = getActivityStreams(href);
       const secondFinger = await lookup(href);
-      const url = new URL(href);
-      let json = '';
 
-      if (firstFinger.subject != secondFinger.subject) {
+      if (firstFinger.object.subject != secondFinger.object.subject) {
         throw new Error;
       }
 
-      await new Promise((resolve, reject) => get({
-        protocol: url.protocol,
-        hostname: url.hostname,
-        port: url.port,
-        path: url.pathname + url.search,
-        headers: { Accept: 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"' }
-      }, response => {
-        response.on('data', chunk => json += chunk);
-        response.on('end', resolve);
-      }).on('error', reject));
-
-      const activityStreams = JSON.parse(json);
-      const context = activityStreams['@context'];
-
-      if ((Array.isArray(context) ?
-            !context.includes('https://www.w3.org/ns/activitystreams') :
-            context != 'https://www.w3.org/ns/activitystreams') ||
-          activityStreams.type != 'Person') {
-        throw new Error;
-      }
-
+      const activityStreams = await asyncActivityStreams;
       return this.fromActivityStreams(repository, host, activityStreams);
     }
 
@@ -138,5 +145,32 @@ export default class {
       await repository.selectLocalAccountByLowerUsername(userpart);
 
     return repository.selectPersonByLocalAccount(account);
+  }
+
+  static async resolveByKeyId(repository, id) {
+    const account = await repository.selectRemoteAccountByKeyId(id);
+
+    if (account) {
+      return account;
+    }
+
+    const activityStreams = await getActivityStreams(id);
+
+    if (activityStreams.publicKey.id != id) {
+      throw new Error;
+    }
+
+    const { object: firstFinger } = await lookup(activityStreams.id);
+    const normalizedFirstSubject = firstFinger.subject.replace(/^acct:/, '');
+    const { object: secondFinger } = await lookup(normalizedFirstSubject);
+
+    if (firstFinger.subject != secondFinger.subject) {
+      throw new Error;
+    }
+
+    const [, encodedHost] = firstFinger.subject.toLowerCase().split('@', 2);
+    const host = toUnicode(encodedHost);
+
+    return this.fromActivityStreams(repository, host, activityStreams);
   }
 }

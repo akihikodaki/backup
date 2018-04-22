@@ -14,4 +14,19 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export default () => {};
+import { globalAgent } from 'https';
+import { verifySignature } from 'http-signature';
+import Activity from '../../primitives/activity';
+import Person from '../../primitives/person';
+
+export default repository => {
+  repository.queue.process(globalAgent.maxFreeSockets, async ({ data }) => {
+    const { keyId } = data.signature;
+    const account = await Person.resolveByKeyId(repository, keyId);
+
+    if (verifySignature(data.signature, account.publicKey.publicKeyPem)) {
+      const person = await repository.selectPersonByRemoteAccount(account);
+      await Activity.act(repository, person, JSON.parse(data.body));
+    }
+  });
+};

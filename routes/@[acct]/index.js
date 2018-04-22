@@ -29,7 +29,7 @@ export async function get(request, response, next) {
   }
 
   const { params: { acct }, repository } = request;
-  const person = await Person.resolve(repository, acct);
+  const person = await Person.resolveByAcct(repository, acct);
   const activityStreams = await person.toActivityStreams(repository);
 
   activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';

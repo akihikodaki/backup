@@ -14,28 +14,20 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { json } from 'express';
-import { parseRequest, verifySignature } from 'http-signature';
-import Activity from '../../primitives/activity';
+import { text } from 'body-parser';
+import { parseRequest } from 'http-signature';
 
-const middleware = json({
+const middleware = text({
   type: ['application/activity+json', 'application/ld+json']
 });
 
 export function post(request, response, next) {
-  const { headers, repository } = request;
-  headers.authorization = 'Signature ' + headers.signature;
+  request.headers.authorization = 'Signature ' + request.headers.signature;
   const signature = parseRequest(request);
 
-  repository.selectRemoteAccountByKeyId(signature.keyId).then(account => {
-    if (!verifySignature(signature, account.publicKey.publicKeyPem)) {
-      return response.sendStatus(401);
-    }
-
-    middleware(request, response, () => {
-      repository.selectPersonByRemoteAccount(account).then(person => {
-        return Activity.act(repository, person, request.body);
-      }).then(() => response.sendStatus(201), next);
-    });
-  }).catch(next);
+  middleware(request, response,
+    () => request.repository
+                 .queue
+                 .add({ signature, body: request.body })
+                 .then(() => response.sendStatus(202), next));
 }
