@@ -14,7 +14,6 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { promisify } from 'util';
 import AccessToken from '../access_token';
 
 function createKey(digest) {
@@ -27,31 +26,24 @@ function createKey(digest) {
 }
 
 export default {
-  insertAccessToken: promisify(function(token, callback) {
+  insertAccessToken(token) {
     const buffer = Buffer.allocUnsafe(token.secret.byteLength + 4);
     const key = createKey(token.digest);
 
     buffer.writeInt32BE(token.personId, 0);
     token.secret.copy(buffer, 4);
 
-    this.redis.publisher.setex(key, 1048576, buffer, callback);
-  }),
+    return this.redis.client.setex(key, 1048576, buffer);
+  },
 
-  selectAccessTokenByDigest(digest) {
-    return new Promise((resolve, reject) => {
-      this.redis.publisher.get(createKey(digest), (error, string) => {
-        if (error) {
-          reject(error);
-        } else {
-          const buffer = Buffer.from(string, 'binary');
+  async selectAccessTokenByDigest(digest) {
+    const string = await this.redis.client.get(createKey(digest));
+    const buffer = Buffer.from(string, 'binary');
 
-          resolve(new AccessToken({
-            digest,
-            personId: buffer.readInt32BE(0),
-            secret: buffer.slice(4)
-          }));
-        }
-      });
+    return new AccessToken({
+      digest,
+      personId: buffer.readInt32BE(0),
+      secret: buffer.slice(4)
     });
   }
 };

@@ -30,19 +30,11 @@ export default {
     const refreshTokenServerSecret = buffer.slice(256, 384);
     const refreshTokenClientSecret = buffer.slice(384, 512);
 
-    const accessToken = AccessToken.create(
-      account,
-      accessTokenServerSecret,
-      accessTokenClientSecret);
-
-    const refreshToken = RefreshToken.create(
-      account,
-      refreshTokenServerSecret,
-      refreshTokenClientSecret);
-
-    await Promise.all([
-      repository.insertAccessToken(accessToken),
-      repository.insertRefreshToken(refreshToken)
+    const [accessToken, refreshToken] = await Promise.all([
+      AccessToken.create(
+        repository, account, accessTokenServerSecret, accessTokenClientSecret),
+      RefreshToken.create(
+        repository, account, refreshTokenServerSecret, refreshTokenClientSecret)
     ]);
 
     return {
@@ -57,10 +49,8 @@ export default {
     const accessTokenServerSecret = buffer.slice(0, 128);
     const accessTokenClientSecret = buffer.slice(128, 256);
 
-    const accessToken = AccessToken.create(
-      account, accessTokenServerSecret, accessTokenClientSecret);
-
-    await repository.insertAccessToken(accessToken);
+    const accessToken = await AccessToken.create(
+      repository, account, accessTokenServerSecret, accessTokenClientSecret);
 
     return accessToken.getToken(accessTokenClientSecret);
   },

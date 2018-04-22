@@ -14,7 +14,6 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { promisify } from 'util';
 import LocalAccount from '../local_account';
 import Person from '../person';
 
@@ -63,20 +62,19 @@ export default {
   async insertIntoInboxes(accounts, item, callback) {
     const activityStreams = JSON.stringify(await item.toActivityStreams());
 
-    const batch = this.redis
-                      .publisher
-                      .batch(accounts.map(account => [
-                        'zadd',
-                        `inbox:${account.id}`,
-                        item.id,
-                        item.id
-                      ]).concat(accounts.map(account => [
-                        'publish',
-                        this.getInboxChannel(account),
-                        activityStreams
-                      ])));
-
-    return promisifiy(batch.exec.bind(batch));
+    return this.redis
+               .publisher
+               .pipeline(accounts.map(account => [
+                 'zadd',
+                 `inbox:${account.id}`,
+                 item.id,
+                 item.id
+               ]).concat(accounts.map(account => [
+                 'publish',
+                 this.getInboxChannel(account),
+                 activityStreams
+               ])))
+               .exec();
   },
 
   selectLocalAccountByAccessToken: selectByForeignPersonId,

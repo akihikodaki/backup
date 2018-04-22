@@ -22,10 +22,9 @@ const urlencodedMiddleware = urlencoded({ extended: false });
 
 export function post(request, response) {
   urlencodedMiddleware(request, response, () => {
-    const { body, repository } = request;
+    const { body: { username, password }, repository } = request;
 
-    LocalAccount.create(body.username, body.password).then(async account => {
-      await repository.insertLocalAccount(account);
+    LocalAccount.create(repository, username, password).then(async account => {
       const { accessToken, refreshToken } =
         await OauthServer.issue(repository, account);
 

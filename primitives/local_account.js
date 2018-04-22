@@ -78,15 +78,19 @@ export default class {
     return timingSafeEqual(this.password, hashedPassword);
   }
 
-  static async create(username, rawPassword) {
+  static async create(repository, username, rawPassword) {
     const salt = await promisifiedRandomBytes(128);
     const password = await hashPassword(rawPassword, salt);
 
-    return new this({
-      person: new Person({ username }),
+    const account = new this({
+      person: new Person({ username, host: null }),
       privateKeyPem: generate(),
       salt,
       password
     });
+
+    await repository.insertLocalAccount(account);
+
+    return account;
   }
 };

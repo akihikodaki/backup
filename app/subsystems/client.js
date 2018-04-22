@@ -14,32 +14,27 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { init } from 'sapper/runtime.js';
-import { routes } from '../app/manifest/client.js';
-import Store from './store';
+import { init } from 'sapper/runtime';
+import Store from '../../primitives/store';
+import { routes } from '../manifest/client';
 
-export default {
-  init(node) {
-    init(node, routes, {
-      store(data) {
-        const store = new Store(data);
+export default node => init(node, routes, {
+  store(data) {
+    const store = new Store(data);
 
-        if (process.browser) {
-          const refreshToken =
-            localStorage.getItem(store.get('refreshTokenKey'));
+    if (process.browser) {
+      const refreshToken = localStorage.getItem(store.get('refreshTokenKey'));
 
-          if (refreshToken) {
-            const username = localStorage.getItem(store.get('usernameKey'));
+      if (refreshToken) {
+        const username = localStorage.getItem(store.get('usernameKey'));
 
-            store.oauth(fetch, username, {
-              grant_type: 'refresh_token',
-              refresh_token: refreshToken
-            });
-          }
-        }
-
-        return store;
+        store.oauth(fetch, username, {
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken
+        });
       }
-    });
+    }
+
+    return store;
   }
-}
+});

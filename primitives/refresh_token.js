@@ -32,6 +32,12 @@ export default class extends Token {
     return base64url(buffer);
   }
 
+  static async create(repository, account, secret, clientSecret) {
+    const token = super.create(account, secret, clientSecret);
+    await repository.insertRefreshToken(token);
+    return token;
+  }
+
   static getIdAndClientSecret(tokenString) {
     const buffer = base64url.toBuffer(tokenString);
 

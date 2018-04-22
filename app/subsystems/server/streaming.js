@@ -15,15 +15,15 @@
 */
 
 import { URLSearchParams } from 'url';
-import { Server as WebSocketServer } from 'ws';
-import OrderedCollection from '../ordered_collection';
-import OauthOwner from '../oauth/owner';
+import { Server } from 'ws';
+import OauthOwner from '../../../primitives/oauth/owner';
+import OrderedCollection from '../../../primitives/ordered_collection';
 
-export default function(repository, server) {
-  const webSocketServer = new WebSocketServer({
+export default (repository, httpServer) => {
+  const webSocketServer = new Server({
     path: '/api/streaming',
-    server,
-    verifyClient: ({ req }, done) => {
+    server: httpServer,
+    verifyClient({ req }, done) {
       const token =
         OauthOwner.parseAuthorization(req) ||
           new URLSearchParams(/\?.*/.exec(req.url)[0]).get('access_token');
@@ -58,4 +58,4 @@ export default function(repository, server) {
       connection.on('close', () => repository.unsubscribe(subscribedChannel));
     });
   });
-}
+};

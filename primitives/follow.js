@@ -14,17 +14,18 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-
 export default class {
   constructor({ actor, actorId, object, objectId }) {
     this.actor = actor;
-    this.actorId = actorId;
+    this.actorId = actor.id || actorId;
     this.object = object;
-    this.objectId = objectId;
+    this.objectId = object.id || objectId;
   }
 
-  static create(actor, object) {
-    return new this({ actor, actorId: actor.id, object, objectId: object.id });
+  static async create(repository, actor, object) {
+    const follow = new this({ actor, object });
+    await repository.insertFollow(follow);
+    return follow;
   }
 
   static async fromActivityStreams(repository, actor, { object }) {
@@ -39,6 +40,6 @@ export default class {
 
     const person = await repository.selectPersonByLocalAccount(account);
 
-    return this.create(actor, person);
+    return this.create(repository, actor, person);
   }
 };

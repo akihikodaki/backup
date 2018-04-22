@@ -38,10 +38,8 @@ export default {
     return rows.map(row => new Note(row));
   },
  
-  async selectRecentNotesFromInbox(account) {
-    const { publisher } = this.redis;
-    const promisifiedZrevrange = promisify(publisher.zrevrange.bind(publisher));
-    const ids = await promisifiedZrevrange(`inbox:${account.personId}`, 0, -1);
+  async selectRecentNotesFromInbox({ personId }) {
+    const ids = await this.redis.client.zrevrange(`inbox:${personId}`, 0, -1);
     const { rows } = await this.pg.query({
       name: 'selectRecentNotesFromInbox',
       text: 'SELECT notes.* FROM notes WHERE id = ANY(string_to_array($1, \',\')::integer[])',

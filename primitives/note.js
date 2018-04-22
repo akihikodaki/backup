@@ -18,7 +18,7 @@ export default class {
   constructor({ id, attributedTo, attributedToId, text }) {
     this.id = id;
     this.attributedTo = attributedTo;
-    this.attributedToId = attributedToId;
+    this.attributedToId = attributedTo.id || attributedToId;
     this.text = text;
   }
 
@@ -26,11 +26,13 @@ export default class {
     return { type: 'Note', text: this.text };
   }
 
-  static create(attributedTo, text) {
-    return new this({ attributedTo, attributedToId: attributedTo.id, text });
+  static async create(repository, attributedTo, text) {
+    const note = this({ attributedTo, text });
+    await repository.insertNote(note);
+    return note;
   }
 
-  static fromActivityStreams(attributedTo, { text }) {
-    return this.create(attributedTo, text);
+  static fromActivityStreams(repository, attributedTo, { text }) {
+    return this.create(repository, attributedTo, text);
   }
 };

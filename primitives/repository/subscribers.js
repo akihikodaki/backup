@@ -15,46 +15,33 @@
 */
 
 export default {
-  subscribe(channel, listen) {
-    return new Promise((resolve, reject) => {
-      if (this.listeners[channel]) {
-        this.listeners[channel].add(listen);
-      } else {
-        this.listeners[channel] = new Set([listen]);
-      }
+  async subscribe(channel, listen) {
+    if (this.listeners[channel]) {
+      this.listeners[channel].add(listen);
+    } else {
+      this.listeners[channel] = new Set([listen]);
 
-      this.redis.subscriber.subscribe(channel, error => {
-        if (error) {
-          if (this.listeners[channel].size <= 1) {
-            delete this.listeners[channel];
-          } else {
-            this.listeners[channel].delete(listen);
-          }
+      const subscription = this.redis.subscriber.subscribe(channel);
 
-          reject(error);
+      subscription.catch(error => {
+        if (this.listeners[channel].size <= 1) {
+          delete this.listeners[channel];
         } else {
-          resolve();
+          this.listeners[channel].delete(listen);
         }
       });
-    });
+
+      return subscription;
+    }
   },
 
-  unsubscribe(channel) {
-    return new Promise((resolve, reject) => {
-      if (this.listeners[channel].size <= 1) {
-        delete this.listeners[channel];
+  async unsubscribe(channel) {
+    if (this.listeners[channel].size <= 1) {
+      delete this.listeners[channel];
 
-        this.redis.subscriber.unsubscribe(channel, error => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
-      } else {
-        this.listeners[channel].delete(listen);
-        resolve();
-      }
-    });
+      return this.redis.subscriber.unsubscribe(channel);
+    }
+
+    this.listeners[channel].delete(listen);
   }
 };

@@ -14,6 +14,7 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import Bull from 'bull';
 import { toUnicode } from 'punycode';
 import AccessTokens from './access_tokens';
 import Follows from './follows';
@@ -23,6 +24,7 @@ import Notes from './notes';
 import Persons from './persons';
 import RefreshTokens from './refresh_tokens';
 import Subscribers from './subscribers';
+const Redis = require('ioredis');
 
 export default function Repository({ console, host, origin, pg, redis }) {
   this.console = console;
@@ -30,12 +32,29 @@ export default function Repository({ console, host, origin, pg, redis }) {
   this.host = toUnicode(host);
   this.origin = origin || 'https://' + host;
   this.pg = pg;
-  this.redis = redis;
 
-  redis.publisher.on('error', console.error);
-  redis.subscriber.on('error', console.error);
+  this.redis = {
+    url: redis,
+    client: new Redis(redis),
+    subscriber: new Redis(redis)
+  };
 
-  redis.subscriber.on('message', (channel, message) => {
+  this.queue = new Bull('HTTP', {
+    createClient: (function(type) {
+      switch (type) {
+      case 'client':
+        return this.client;
+
+      case 'subscriber':
+        return this.subscriber;
+
+      default:
+        return new Redis(redis);
+      }
+    }).bind(this.redis)
+  });
+
+  this.redis.subscriber.on('message', (channel, message) => {
     for (const listen of this.listeners[channel]) {
       listen(channel, message);
     }

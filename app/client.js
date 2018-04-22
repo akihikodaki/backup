@@ -14,9 +14,9 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import Client from '../primitives/client';
+import init from './subsystems/client';
 
-Client.init(document.getElementById('root'));
+init(document.getElementById('root'));
 
 if (module.hot) {
   module.hot.accept();

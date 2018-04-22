@@ -27,20 +27,12 @@ export default {
 
     switch (activity.type) {
     case 'Follow':
-      const follow =
-        await Follow.fromActivityStreams(repository, actor, activity);
-
-      if (follow) {
-        await repository.insertFollow(follow);
-      }
+      await Follow.fromActivityStreams(repository, actor, activity);
       break;
 
     case 'Note':
-      const note = Note.fromActivityStreams(actor, activity);
-      const [followers] = await Promise.all([
-        repository.selectLocalAccountsByFollowee(actor),
-        repository.insertNote(note)
-      ]);
+      const note = await Note.fromActivityStreams(repository, actor, activity);
+      const followers = await repository.selectLocalAccountsByFollowee(actor);
 
       await repository.insertIntoInboxes(followers, note);
       break;

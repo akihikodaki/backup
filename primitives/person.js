@@ -70,11 +70,7 @@ export default class {
     };
   }
 
-  static create(username) {
-    return new this({ username, host: null });
-  }
-
-  static fromActivityStreams({ id, publicKey, preferredUsername: username }) {
+  static async fromActivityStreams(repository, host, { id, publicKey, preferredUsername: username }) {
     const idUrl = new URL(id);
     const publicKeyIdUrl = new URL(publicKey.id);
 
@@ -82,7 +78,11 @@ export default class {
       throw new Error;
     }
 
-    return new this({ account: new RemoteAccount({ publicKey }), username });
+    const person =
+      new this({ account: new RemoteAccount({ publicKey }), username, host });
+
+    await repository.insertRemoteAccount(person.account);
+    return person;
   }
 
   static async resolve(repository, acct) {
@@ -131,11 +131,7 @@ export default class {
         throw new Error;
       }
 
-      const person = this.fromActivityStreams(activityStreams);
-      person.host = host;
-      await repository.insertRemoteAccount(person.account);
-
-      return person;
+      return this.fromActivityStreams(repository, host, activityStreams);
     }
 
     const account =
