@@ -15,7 +15,7 @@
 */
 
 export default class {
-  constructor({ publicKey, person, personId }) {
+  constructor({ uri, publicKey, person, personId }) {
     if (person) {
       person.account = this;
       this.person = person;
@@ -24,6 +24,7 @@ export default class {
       this.personId = personId;
     }
 
+    this.uri = uri;
     this.publicKey = publicKey;
   }
 }

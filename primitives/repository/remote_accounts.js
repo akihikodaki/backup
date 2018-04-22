@@ -26,6 +26,7 @@ async function selectIncludingPerson(query) {
       username: rows[0].person_username,
       host: rows[0].person_host || null
      }),
+    uri: rows[0].uri,
     publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
   }) : null;
 }
@@ -34,10 +35,11 @@ export default {
   async insertRemoteAccount(account) {
     const { rows: [ { id } ] } = await this.pg.query({
       name: 'insertRemoteAccount',
-      text: 'SELECT insert_remote_account($1, $2, $3, $4)',
+      text: 'SELECT insert_remote_account($1, $2, $3, $4, $5)',
       values: [
         account.person.username,
         account.person.host,
+        account.uri,
         account.publicKey.id,
         account.publicKey.publicKeyPem
       ]
@@ -76,6 +78,7 @@ export default {
     });
 
     return new RemoteAccount({
+      uri: rows[0].uri,
       publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
     });
   }

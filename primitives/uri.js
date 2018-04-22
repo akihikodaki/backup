@@ -20,4 +20,10 @@ export default {
                              .replace(/\?/g, '%3F')
                              .replace(/#/g, '%23');
   }
+
+  encodeAcctUserpart(userpart) {
+    return this.encodeSegment(userpart)
+               .replace(/:/g, '%3A')
+               .replace(/@/g, '%40');
+  }
 };

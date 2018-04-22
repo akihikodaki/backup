@@ -16,7 +16,7 @@
 
 import { request } from 'http';
 import { sign } from 'http-signature';
-import URI from './uri';
+import Key from './key';
 
 export default class {
   constructor({ follow, followId }) {
@@ -55,7 +55,7 @@ export default class {
           response.on('end', resolve);
         }).on('error', reject))
       ]);
-      const key = repository.selectKeyByLocalAccount(actor);
+      const key = new Key({ owner: actor });
 
       sign(clientRequest, {
         authorizationHeaderName: 'Signature',

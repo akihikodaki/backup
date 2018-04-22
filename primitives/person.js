@@ -68,6 +68,15 @@ export default class {
     this.host = host;
   }
 
+  async getUri(repository) {
+    if (this.host) {
+      const account = await repository.selectRemoteAccountByPerson(this);
+      return account.uri;
+    }
+
+    return `${repository.origin}/@${URI.encodeSegment(this.username)}`;
+  }
+
   async toActivityStreams(repository) {
     if (this.host) {
       const acct = URI.encodeSegment(`${this.username}@${this.host}`);
@@ -83,7 +92,7 @@ export default class {
     }
 
     const account = await repository.selectLocalAccountByPerson(this);
-    const id = `${repository.origin}/@${URI.encodeSegment(this.username)}`;
+    const id = await this.getUri(repository);
 
     return {
       id,
@@ -107,8 +116,11 @@ export default class {
       throw new Error;
     }
 
-    const person =
-      new this({ account: new RemoteAccount({ publicKey }), username, host });
+    const person = new this({
+      account: new RemoteAccount({ uri: id, publicKey }),
+      username,
+      host
+    });
 
     await repository.insertRemoteAccount(person.account);
     return person;
