@@ -32,6 +32,7 @@ export default function Repository({ console, host, origin, pg, redis }) {
   this.host = toUnicode(host);
   this.origin = origin || 'https://' + host;
   this.pg = pg;
+  this.loadeds = new WeakSet;
 
   this.redis = {
     url: redis,

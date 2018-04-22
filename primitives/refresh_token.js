@@ -18,9 +18,9 @@ import Token from './token';
 const base64url = require('base64url');
 
 export default class extends Token {
-  constructor(attributes) {
-    super(attributes);
-    this.id = attributes.id;
+  constructor(properties) {
+    super(properties);
+    this.id = properties.id;
   }
 
   getToken(clientSecret) {

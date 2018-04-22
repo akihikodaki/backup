@@ -17,11 +17,8 @@
 import Accept from './accept';
 
 export default class {
-  constructor({ actor, actorId, object, objectId }) {
-    this.actor = actor;
-    this.actorId = actor.id || actorId;
-    this.object = object;
-    this.objectId = object.id || objectId;
+  constructor(properties) {
+    Object.assign(this, properties);
   }
 
   static async create(repository, actor, object) {

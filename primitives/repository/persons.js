@@ -16,23 +16,27 @@
 
 import Person from '../person';
 
-function selectByPersonId() {
-  return this.pg.query({
-    name: 'persons.selectByPersonId',
-    text: 'SELECT * FROM persons WHERE id = $1',
-    values: [lowerUsername]
-  });
-}
-
-async function selectByAccount(account) {
-  if (account.person) {
-    return account.person;
+async function load(person) {
+  if (this.loadeds.has(person)) {
+    return person;
   }
 
-  const { rows: [ { username, host } ] } =
-    await selectByPersonId.call(this, account.persnId);
+  const { rows: [ { username, host } ] } = await this.pg.query({
+    name: 'persons.load',
+    text: 'SELECT * FROM persons WHERE id = $1',
+    values: [person.id]
+  });
 
-  return new Person({ account, username, host: host || null });
+  person.username = username;
+  person.host = host || null;
+
+  this.loadeds.add(person);
+
+  return person;
+}
+
+function selectByAccount({ person }) {
+  return load(person);
 }
 
 export default {
@@ -40,13 +44,6 @@ export default {
   selectPersonByRemoteAccount: selectByAccount,
 
   async selectPersonByKey(key) {
-    if (key.owner) {
-      return key.owner;
-    }
-
-    const { rows: [ { username, host } ] } =
-      await selectByPersonId.call(this, account.persnId);
-
-    return new Person({ username, host: host || null });
+    return load(key.owner);
   }
 };

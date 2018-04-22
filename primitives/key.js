@@ -17,9 +17,8 @@
 import URI from './uri';
 
 export default class {
-  constructor({ owner, ownerId }) {
-    this.owner = owner;
-    this.ownerId = owner.id || ownerId;
+  constructor(properties) {
+    Object.assign(this, properties);
   }
 
   async getUri(repository) {

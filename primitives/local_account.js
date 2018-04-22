@@ -43,18 +43,12 @@ const hashPassword = promisify((rawPassword, salt, callback) => {
 });
 
 export default class {
-  constructor({ person, personId, privateKeyPem, salt, password }) {
-    if (person) {
-      person.account = this;
-      this.person = person;
-      this.personId = person.id;
-    } else {
-      this.personId = personId;
-    }
+  constructor(properties) {
+    Object.assign(this, properties);
 
-    this.privateKeyPem = privateKeyPem;
-    this.salt = salt;
-    this.password = password;
+    if (this.person) {
+      this.person.account = this;
+    }
   }
 
   async toWebFinger(repository) {

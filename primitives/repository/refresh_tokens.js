@@ -15,6 +15,8 @@
 */
 
 import RefreshToken from '../refresh_token';
+import LocalAccount from '../local_account';
+import Person from '../person';
 
 export default {
   async insertRefreshToken(token) {
@@ -25,6 +27,7 @@ export default {
     });
 
     token.id = rows[0].id;
+    this.loadeds.add(token);
   },
 
   async selectRefreshTokenById(id) {
@@ -34,11 +37,14 @@ export default {
       values: [id]
     });
 
-    return new RefreshToken({
+    const token = new RefreshToken({
       id,
-      personId: person_id,
+      account: new LocalAccount({ person: new Person({ id: person_id }) }),
       secret,
       digest
     });
+
+    this.loadeds.add(token);
+    return token;
   }
 };

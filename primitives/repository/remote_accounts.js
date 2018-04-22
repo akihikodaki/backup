@@ -20,15 +20,24 @@ import RemoteAccount from '../remote_account';
 async function selectIncludingPerson(query) {
   const { rows } = await this.pg.query(query);
 
-  return rows[0] ? new RemoteAccount({
-    person: new Person({
-      id: rows[0].person_id,
-      username: rows[0].person_username,
-      host: rows[0].person_host || null
-     }),
-    uri: rows[0].uri,
-    publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
-  }) : null;
+  if (rows[0]) {
+    const account = new RemoteAccount({
+      person: new Person({
+        id: rows[0].person_id,
+        username: rows[0].person_username,
+        host: rows[0].person_host || null
+       }),
+      uri: rows[0].uri,
+      publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
+    });
+
+    this.loadeds.add(account);
+    this.loadeds.add(account.person);
+
+    return account;
+  }
+
+  return null;
 }
 
 export default {
@@ -46,7 +55,9 @@ export default {
     });
 
     account.person.id = id;
-    account.personId = id;
+
+    this.loadeds.add(account);
+    this.loadeds.add(account.person);
   },
 
   selectRemoteAccountByLowerUsernameAndHost(lowerUsername, lowerHost) {
@@ -66,20 +77,24 @@ export default {
   },
 
   async selectRemoteAccountByObjectOfFollow(follow) {
-    if (follow.object && follow.object.account) {
+    if (follow.object && this.loadeds.has(follow.object.account)) {
       return follow.object.account instanceof RemoteAccount ?
         follow.object.account : null;
     }
 
     const { rows } = await this.pg.query({
       name: 'selectRemoteAccountByObjectOfFollow',
-      text: 'SELECT remote_accounts.* FROM follows JOIN remote_accounts ON follows.object_id = remote_accounts.person_id WHERE follow.id = $1',
-      values: [follow.id]
+      text: 'SELECT * FROM remote_accounts ON remote_accounts.person_id = $1',
+      values: [follow.object.id]
     });
 
-    return new RemoteAccount({
+    follow.object.account = new RemoteAccount({
+      person: follow.object,
       uri: rows[0].uri,
       publicKey: { id: rows[0].key_id, publicKeyPem: rows[0].public_key_pem }
     });
+
+    this.loadeds.add(follow.object.account);
+    return account;
   }
 };

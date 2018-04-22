@@ -23,5 +23,6 @@ export default {
     });
 
     follow.id = rows[0].id;
+    this.loadeds.add(follow);
   }
 };

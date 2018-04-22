@@ -22,10 +22,11 @@ export default {
     const { rows } = await this.pg.query({
       name: 'insertNote',
       text: 'INSERT INTO notes (attributed_to_id, text) VALUES ($1, $2) RETURNING id',
-      values: [note.attributedToId, note.text]
+      values: [note.attributedTo.id, note.text]
     });
 
     note.id = rows[0].id;
+    this.loadeds.add(note);
   },
 
   async selectRecentNotesByLowerUsernameAndHost(lowerUsername, lowerHost) {
@@ -35,11 +36,15 @@ export default {
       values: [lowerUsername, lowerHost || '']
     });
 
-    return rows.map(row => new Note(row));
+    return rows.map(row => {
+      const note = new Note(row);
+      this.loadeds.add(note);
+      return note;
+    });
   },
  
-  async selectRecentNotesFromInbox({ personId }) {
-    const ids = await this.redis.client.zrevrange(`inbox:${personId}`, 0, -1);
+  async selectRecentNotesFromInbox({ person }) {
+    const ids = await this.redis.client.zrevrange(`inbox:${person.id}`, 0, -1);
     const { rows } = await this.pg.query({
       name: 'selectRecentNotesFromInbox',
       text: 'SELECT notes.* FROM notes WHERE id = ANY(string_to_array($1, \',\')::integer[])',
@@ -48,6 +53,10 @@ export default {
 
     return ids.map(id => rows.find(row => row.id == id))
               .filter(Boolean)
-              .map(row => new Note(row));
+              .map(row => {
+      const note = new Note(row);
+      this.loadeds.add(note);
+      return note;
+    });
   }
 };

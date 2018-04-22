@@ -19,16 +19,15 @@ import { sign } from 'http-signature';
 import Key from './key';
 
 export default class {
-  constructor({ follow, followId }) {
-    this.follow = follow;
-    this.followId = follow.id || followId;
+  constructor(properties) {
+    Object.assign(this, properties);
   }
 
   toActivityStreams() {
     return {
       type: 'Accept',
-      actor: this.follow.object.id,
-      object: this.follow.actor.id,
+      actor: TODO,
+      object: TODO,
     };
   }
 

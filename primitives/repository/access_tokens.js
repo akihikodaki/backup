@@ -15,6 +15,8 @@
 */
 
 import AccessToken from '../access_token';
+import LocalAccount from '../local_account';
+import Person from '../person';
 
 function createKey(digest) {
   const buffer = Buffer.allocUnsafe('accessTokens:'.length + digest.byteLength);
@@ -30,8 +32,9 @@ export default {
     const buffer = Buffer.allocUnsafe(token.secret.byteLength + 4);
     const key = createKey(token.digest);
 
-    buffer.writeInt32BE(token.personId, 0);
+    buffer.writeInt32BE(token.account.person.id, 0);
     token.secret.copy(buffer, 4);
+    this.loadeds.add(token);
 
     return this.redis.client.setex(key, 1048576, buffer);
   },
@@ -40,10 +43,15 @@ export default {
     const string = await this.redis.client.get(createKey(digest));
     const buffer = Buffer.from(string, 'binary');
 
-    return new AccessToken({
+    const token = new AccessToken({
       digest,
-      personId: buffer.readInt32BE(0),
+      account: new LocalAccount({
+        person: new Person({ id: buffer.readInt32BE(0) })
+      }),
       secret: buffer.slice(4)
     });
+
+    this.loadeds.add(token);
+    return token;
   }
 };

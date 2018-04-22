@@ -19,7 +19,7 @@ export default {
     return encodeURI(segment).replace(/\//g, '%2F')
                              .replace(/\?/g, '%3F')
                              .replace(/#/g, '%23');
-  }
+  },
 
   encodeAcctUserpart(userpart) {
     return this.encodeSegment(userpart)

@@ -15,11 +15,8 @@
 */
 
 export default class {
-  constructor({ id, attributedTo, attributedToId, text }) {
-    this.id = id;
-    this.attributedTo = attributedTo;
-    this.attributedToId = attributedTo.id || attributedToId;
-    this.text = text;
+  constructor(properties) {
+    Object.assign(this, properties);
   }
 
   async toActivityStreams() {

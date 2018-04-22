@@ -15,8 +15,8 @@
 */
 
 export default class {
-  constructor({ orderedItems }) {
-    this.orderedItems = orderedItems;
+  constructor(properties) {
+    Object.assign(this, properties);
   }
 
   async toActivityStreams(repository) {

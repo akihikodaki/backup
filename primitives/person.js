@@ -56,16 +56,12 @@ async function getActivityStreams(href) {
 }
 
 export default class {
-  constructor({ account, id, username, host }) {
-    if (account) {
-      account.person = this;
-      account.personId = id;
-      this.account = account;
-    }
+  constructor(properties) {
+    Object.assign(this, properties);
 
-    this.id = id;
-    this.username = username;
-    this.host = host;
+    if (account) {
+      this.account.person = this;
+    }
   }
 
   async getUri(repository) {

@@ -30,11 +30,8 @@ function digest(secret, data) {
 }
 
 export default class {
-  constructor({ account, personId, secret, digest }) {
-    this.account = account;
-    this.personId = personId;
-    this.secret = secret;
-    this.digest = digest;
+  constructor(properties) {
+    Object.assign(this, properties);
   }
 
   authenticate(clientSecret) {
@@ -44,7 +41,6 @@ export default class {
   static create(account, secret, clientSecret) {
     return new this({
       account,
-      personId: account.personId,
       secret,
       digest: digest(secret, clientSecret)
     });

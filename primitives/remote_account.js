@@ -15,16 +15,11 @@
 */
 
 export default class {
-  constructor({ uri, publicKey, person, personId }) {
-    if (person) {
-      person.account = this;
-      this.person = person;
-      this.personId = person.id;
-    } else {
-      this.personId = personId;
-    }
+  constructor(properties) {
+    Object.assign(this, properties);
 
-    this.uri = uri;
-    this.publicKey = publicKey;
+    if (this.person) {
+      this.person.account = this;
+    }
   }
 }

@@ -17,25 +17,8 @@
 import LocalAccount from '../local_account';
 import Person from '../person';
 
-async function selectByPersonId(personId) {
-  const { rows: [ { private_key_pem: privateKeyPem, salt, password } ] } =
-    await this.pg.query({
-      name: 'local_accounts.selectByPersonId',
-      text: 'SELECT * FROM local_accounts WHERE person_id = $1',
-      values: [personId],
-    });
-
-  return new LocalAccount({ personId, privateKeyPem, salt, password });
-}
-
-async function selectByForeignPersonId(foreign) {
-  if (foreign.account) {
-    return foreign.account;
-  }
-
-  foreign.account = await selectByPersonId.call(this, foreign.personId);
-
-  return foreign.account;
+function selectByForeignAccount({ account }) {
+  return this.selectLocalAccountByPerson(account.person);
 }
 
 export default {
@@ -56,7 +39,9 @@ export default {
     });
 
     account.person.id = insert_local_account;
-    account.personId = insert_local_account;
+
+    this.loadeds.add(account);
+    this.loadeds.add(account.person);
   },
 
   async insertIntoInboxes(accounts, item, callback) {
@@ -77,8 +62,8 @@ export default {
                .exec();
   },
 
-  selectLocalAccountByAccessToken: selectByForeignPersonId,
-  selectLocalAccountByRefreshToken: selectByForeignPersonId,
+  selectLocalAccountByAccessToken: selectByForeignAccount,
+  selectLocalAccountByRefreshToken: selectByForeignAccount,
 
   async selectLocalAccountsByFollowee({ id }) {
     const { rows } = await this.pg.query({
@@ -92,7 +77,17 @@ export default {
       private_key_pem: privateKeyPem,
       salt,
       password
-    }) => new LocalAccount({ personId, privateKeyPem, salt, password }));
+    }) => {
+      const account = new LocalAccount({
+        person: new Person({ id: personId }),
+        privateKeyPem,
+        salt,
+        password
+      });
+
+      this.loadeds.add(account);
+      return account;
+    });
   },
 
   async selectLocalAccountByLowerUsername(lowerUsername) {
@@ -103,45 +98,6 @@ export default {
         text: 'SELECT local_accounts.*, persons.username AS person_username FROM local_accounts JOIN persons ON local_accounts.person_id = persons.id WHERE lower(persons.username) = $1 AND lower(persons.host) = \'\'',
         values: [lowerUsername]
       });
-
-    return new LocalAccount({
-      person: new Person({
-        id: person_id,
-        username: person_username,
-        host: null
-      }),
-      privateKeyPem: private_key_pem,
-      salt,
-      password
-    });
-  },
-
-  async selectLocalAccountByPerson(person) {
-    if (person.account) {
-      return person.account;
-    }
-
-    const account = await selectByPersonId(person.id);
-
-    account.person = person;
-    person.account = account;
-
-    return account;
-  },
-
-  async selectLocalAccountIncludingPersonByActorOfFollow(follow) {
-    if (follow.actor && follow.actor.account) {
-      return follow.actor.account instanceof LocalAccount ?
-        follow.actor.account : null;
-    }
-
-    const {
-      rows: [ { person_id, person_username, private_key_pem, salt, password } ]
-    } = await this.pg.query({
-      name: 'selectLocalAccountIncludingPersonByActorOfFollow',
-      text: 'SELECT local_accounts.*, persons.username AS person_username FROM local_accounts JOIN persons ON local_accounts.person_id = persons.id JOIN follow ON local_accounts.person_id = follow.actor_id WHERE follow.id = $1',
-      values: [follow.id]
-    });
 
     const account = new LocalAccount({
       person: new Person({
@@ -154,8 +110,67 @@ export default {
       password
     });
 
-    follow.actor = account.person;
+    this.loadeds.add(account);
+    this.loadeds.add(account.person);
 
     return account;
+  },
+
+  async selectLocalAccountByPerson(person) {
+    if (this.loadeds.has(person.account)) {
+      return person.account instanceof LocalAccount ? person.account : null;
+    }
+
+    const { rows: [ { private_key_pem: privateKeyPem, salt, password } ] } =
+      await this.pg.query({
+        name: 'selectLocalAccountByPerson',
+        text: 'SELECT * FROM local_accounts WHERE person_id = $1',
+        values: [person.id],
+      });
+
+    if (person.account) {
+      person.account.privateKeyPem = privateKeyPem;
+      person.account.salt = salt;
+      person.account.password = password;
+    } else {
+      person.account = new LocalAccount({
+        person,
+        privateKeyPem,
+        salt,
+        password
+      });
+    }
+
+    this.loadeds.add(person.account);
+
+    return person.account;
+  },
+
+  async selectLocalAccountIncludingPersonByActorOfFollow(follow) {
+    if (this.loadeds.has(follow.actor)) {
+      return this.selectLocalAccountByPerson(follow.actor);
+    }
+
+    const {
+      rows: [ { person_id, person_username, private_key_pem, salt, password } ]
+    } = await this.pg.query({
+      name: 'selectLocalAccountIncludingPersonByActorOfFollow',
+      text: 'SELECT local_accounts.*, persons.username AS person_username FROM local_accounts JOIN persons ON local_accounts.person_id = persons.id JOIN follow ON local_accounts.person_id = follow.actor_id WHERE follow.id = $1',
+      values: [follow.id]
+    });
+
+    follow.actor.username = person_username;
+    follow.actor.host = null;
+    follow.actor.account = new LocalAccount({
+      person: follow.actor,
+      privateKeyPem: private_key_pem,
+      salt,
+      password
+    });
+
+    this.loadeds.add(follow.actor);
+    this.loadeds.add(follow.actor.account);
+
+    return follow.actor.account;
   }
 };
