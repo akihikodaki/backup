@@ -15,7 +15,7 @@
 */
 
 import { init } from 'sapper/runtime';
-import Store from '../../primitives/store';
+import Store from '../../lib/store';
 import { routes } from '../manifest/client';
 
 export default node => init(node, routes, {

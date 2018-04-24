@@ -16,7 +16,7 @@
 
 import { createServer } from 'http';
 import sapper from 'sapper';
-import Store from '../../../primitives/store';
+import Store from '../../../lib/store';
 import { routes } from '../../manifest/server';
 import createStreaming from './streaming';
 const Arena = require('bull-arena');

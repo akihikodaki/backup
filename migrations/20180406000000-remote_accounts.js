@@ -16,7 +16,8 @@
 
 exports.up = (db, callback) => db.createTable('remote_accounts', {
   uri: { type: 'string', notNull: true, unique: true },
-  key_id: { type: 'string', notNull: true, unique: true },
+  inbox_uri: { type: 'string', notNull: true },
+  key_uri: { type: 'string', notNull: true, unique: true },
   public_key_pem: { type: 'string', notNull: true },
   person_id: {
     type: 'int',

@@ -15,9 +15,9 @@
 */
 
 import { json } from 'express';
-import Activity from '../../primitives/activity';
-import OrderedCollection from '../../primitives/ordered_collection';
-import OauthOwner from '../../primitives/oauth/owner';
+import Activity from '../../lib/activity';
+import OrderedCollection from '../../lib/ordered_collection';
+import OauthOwner from '../../lib/oauth/owner';
 
 const middleware = json({
   type: ['application/activity+json', 'application/ld+json']
@@ -41,7 +41,7 @@ export function post(request, response, next) {
     middleware(request, response, () => {
       const { account, repository } = request;
 
-      repository.selectPersonByLocalAccount(account).then(async person => {
+      account.selectPerson(repository).then(async person => {
         if (request.params.acct == person.username) {
           await Activity.act(repository, person, request.body);
           response.sendStatus(201);

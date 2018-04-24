@@ -15,7 +15,7 @@
 */
 
 import { urlencoded } from 'express';
-import OauthServer from '../../primitives/oauth/server';
+import OauthServer from '../../lib/oauth/server';
 
 const urlencodedMiddleware = urlencoded({ extended: false });
 

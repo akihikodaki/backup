@@ -15,18 +15,18 @@
 */
 
 import { globalAgent } from 'https';
-import { verifySignature } from 'http-signature';
-import Activity from '../../primitives/activity';
-import Person from '../../primitives/person';
+import Activity from '../../lib/activity';
+import Key from '../../lib/key';
+import Person from '../../lib/person';
 
 export default repository => {
   repository.queue.process(globalAgent.maxFreeSockets, async ({ data }) => {
     const { keyId } = data.signature;
-    const account = await Person.resolveByKeyId(repository, keyId);
+    const owner = await Person.resolveByKeyUri(repository, keyId);
+    const key = new Key({ owner });
 
-    if (verifySignature(data.signature, account.publicKey.publicKeyPem)) {
-      const person = await repository.selectPersonByRemoteAccount(account);
-      await Activity.act(repository, person, JSON.parse(data.body));
+    if (await key.verifySignature(repository, data.signature)) {
+      await Activity.act(repository, owner, JSON.parse(data.body));
     }
   });
 };

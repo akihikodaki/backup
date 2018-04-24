@@ -15,7 +15,7 @@
 */
 
 import { Pool } from 'pg';
-import Repository from '../primitives/repository';
+import Repository from '../lib/repository';
 import processJobs from './subsystems/processor';
 
 const repository = new Repository({

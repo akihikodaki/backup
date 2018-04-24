@@ -16,8 +16,8 @@
 
 import { URLSearchParams } from 'url';
 import { Server } from 'ws';
-import OauthOwner from '../../../primitives/oauth/owner';
-import OrderedCollection from '../../../primitives/ordered_collection';
+import OauthOwner from '../../../lib/oauth/owner';
+import OrderedCollection from '../../../lib/ordered_collection';
 
 export default (repository, httpServer) => {
   const webSocketServer = new Server({
