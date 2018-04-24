@@ -30,8 +30,8 @@ export async function get(request, response, next) {
 
   const { params: { acct }, repository } = request;
   const person = await Person.resolveByAcct(repository, acct);
-  const activityStreams = await person.toActivityStreams(repository);
+  const { body } = await person.toActivityStreams(repository);
 
-  activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
-  return response.json(activityStreams);
+  body['@context'] = 'https://www.w3.org/ns/activitystreams';
+  return response.json(body);
 }

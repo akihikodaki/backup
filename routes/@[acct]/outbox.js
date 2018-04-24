@@ -29,10 +29,10 @@ export function get({ params, repository }, response, next) {
   repository.selectRecentNotesByLowerUsernameAndHost(userpart, host).then(
     async orderedItems => {
       const collection = new OrderedCollection({ orderedItems });
-      const activityStreams = await collection.toActivityStreams(repository);
+      const { body } = await collection.toActivityStreams(repository);
 
-      activityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
-      response.json(activityStreams);
+      body['@context'] = 'https://www.w3.org/ns/activitystreams';
+      response.json(body);
     }).catch(next);
 }
 

@@ -49,8 +49,8 @@ export default (repository, httpServer) => {
 
       const subscribedChannel = repository.getInboxChannel(account);
 
-      initialActivityStreams['@context'] = 'https://www.w3.org/ns/activitystreams';
-      connection.send(JSON.stringify(initialActivityStreams));
+      initialActivityStreams.body['@context'] = 'https://www.w3.org/ns/activitystreams';
+      connection.send(JSON.stringify(initialActivityStreams.body));
 
       await repository.subscribe(subscribedChannel,
         (publishedChannel, message) => connection.send(`{"@context":"https://www.w3.org/ns/activitystreams","type":"OrderedCollection","orderedItems":[${message}]}`));
