@@ -15,7 +15,7 @@
 */
 
 import { globalAgent } from 'https';
-import Activity from '../../lib/activity';
+import ActivityStreams from '../../lib/activitystreams';
 import Key from '../../lib/key';
 import Person from '../../lib/person';
 
@@ -26,7 +26,10 @@ export default repository => {
     const key = new Key({ owner });
 
     if (await key.verifySignature(repository, data.signature)) {
-      await Activity.act(repository, owner, JSON.parse(data.body));
+      const activity = new ActivityStreams(JSON.parse(data.body));
+
+      activity.validateContext();
+      await activity.act(repository, owner);
     }
   });
 };
