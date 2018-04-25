@@ -126,4 +126,4 @@ NAN_MODULE_INIT(InitAll)
       Nan::New<v8::FunctionTemplate>(generate)).ToLocalChecked());
 }
 
-NODE_MODULE(crypto_key, InitAll);
+NODE_MODULE(key, InitAll);

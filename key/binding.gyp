@@ -18,19 +18,6 @@
       'target_name': 'key',
       'sources': ['key.cc'],
       'include_dirs': ['<!(node -e "require(\'nan\')")']
-    },
-
-    # Copy the binary from the build directory beforehand Sapper blows it up.
-    {
-      'target_name': 'copy',
-      'type': 'none',
-      'dependencies': ['key'],
-      'copies': [
-        {
-          'destination': '<(module_root_dir)',
-          'files': ['<(module_root_dir)/build/Release/key.node']
-        }
-      ]
     }
   ]
 }

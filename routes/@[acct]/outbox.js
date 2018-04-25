@@ -15,7 +15,7 @@
 */
 
 import { json } from 'express';
-import Activity from '../../lib/activity';
+import ActivityStreams from '../../lib/activitystreams';
 import OrderedCollection from '../../lib/ordered_collection';
 import OauthOwner from '../../lib/oauth/owner';
 
@@ -43,7 +43,8 @@ export function post(request, response, next) {
 
       account.selectPerson(repository).then(async person => {
         if (request.params.acct == person.username) {
-          await Activity.act(repository, person, request.body);
+          const activity = new ActivityStreams(request.body);
+          await activity.act(repository, person);
           response.sendStatus(201);
         } else {
           response.sendStatus(401);
