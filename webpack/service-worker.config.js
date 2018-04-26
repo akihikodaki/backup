@@ -19,5 +19,6 @@ const { serviceworker } = require('sapper/webpack/config');
 module.exports = {
   entry: serviceworker.entry(),
   output: serviceworker.output(),
-  mode: process.env.NODE_ENV
+  mode: process.env.NODE_ENV,
+  devtool: process.env.NODE_ENV == 'production' ? 'source-map' : null
 };

@@ -26,7 +26,7 @@ exports.up = (db, callback) => db.createTable('notes', {
       mapping: 'id',
     }
   },
-  text: { type: 'string', notNull: true }
+  content: { type: 'string', notNull: true }
 }, callback);
 
 exports._meta = { version: 1 };

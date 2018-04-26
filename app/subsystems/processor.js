@@ -15,7 +15,7 @@
 */
 
 import { globalAgent } from 'https';
-import ActivityStreams from '../../lib/activitystreams';
+import ActivityStreams, { TypeNotAllowed } from '../../lib/activitystreams';
 import Key from '../../lib/key';
 import Person from '../../lib/person';
 
@@ -29,7 +29,12 @@ export default repository => {
       const collection = new ActivityStreams(JSON.parse(data.body));
       const items = await collection.getItems();
 
-      await Promise.all(items.map(item => item.act(repository, owner)));
+      await Promise.all(items.map(item =>
+        item.act(repository, owner).catch(error => {
+          if (!(error instanceof TypeNotAllowed)) {
+            throw error;
+          }
+        })));
     }
   });
 };

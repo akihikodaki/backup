@@ -16,13 +16,13 @@
 
 <h1>{{$user.preferredUsername}}</h1>
 <form on:submit='post(event)'>
-  <textarea name='text' />
+  <textarea name='content' />
   <button>Post</button>
 </form>
 <ol>
   {{#each $user.inbox as item}}
     {{#if item.type == 'Note'}}
-      <li>{{item.text}}</li>
+      <li>{{item.content}}</li>
     {{/if}}
   {{/each}}
 </ol>
@@ -35,7 +35,7 @@
     methods: {
       post(event) {
         event.preventDefault();
-        this.store.createNote(fetch, event.target.elements.text.value);
+        this.store.createNote(fetch, event.target.elements.content.value);
       }
     }
   };

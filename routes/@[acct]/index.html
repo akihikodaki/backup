@@ -21,7 +21,7 @@
 <ol>
   {{#each person.outbox.orderedItems as item}}
     {{#if item.type == 'Note'}}
-      <li>{{item.text}}</li>
+      <li>{{item.content}}</li>
     {{/if}}
   {{/each}}
 </ol>

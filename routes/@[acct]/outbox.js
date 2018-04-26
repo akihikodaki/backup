@@ -46,7 +46,18 @@ export function post(request, response, next) {
           const collection = new ActivityStreams(request.body);
           const items = await collection.getItems();
 
-          await Promise.all(items.map(item => item.act(repository, person)));
+          await Promise.all(items.map(item =>
+            item.act(repository, person).catch(error => {
+              if (error instanceof TypeNotAllowed) {
+                return item.create(repository, person).catch(error => {
+                  if (!(error instanceof TypeNotAllowed)) {
+                    throw error;
+                  }
+                });
+              }
+
+              throw error;
+            })));
           response.sendStatus(201);
         } else {
           response.sendStatus(401);

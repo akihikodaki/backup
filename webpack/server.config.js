@@ -23,9 +23,10 @@ module.exports = {
     processor: join(__dirname, '../app/processor')
   }, server.entry()),
   output: server.output(),
-  externals: Object.keys(dependencies),
   mode: process.env.NODE_ENV,
-  resolve: { extensions: ['.html', '.js', '.node'] },
+  devtool: 'source-map',
+  externals: Object.keys(dependencies),
+  resolve: { extensions: ['.html', '.js'] },
   target: 'node',
   module: {
     rules: [
@@ -41,9 +42,6 @@ module.exports = {
             generate: 'ssr'
           }
         }
-      }, {
-        test: /\.node$/,
-        use: 'node-loader'
       }
     ]
   }
