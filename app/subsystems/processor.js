@@ -26,10 +26,10 @@ export default repository => {
     const key = new Key({ owner });
 
     if (await key.verifySignature(repository, data.signature)) {
-      const activity = new ActivityStreams(JSON.parse(data.body));
+      const collection = new ActivityStreams(JSON.parse(data.body));
+      const items = await collection.getItems();
 
-      activity.validateContext();
-      await activity.act(repository, owner);
+      await Promise.all(items.map(item => item.act(repository, owner)));
     }
   });
 };

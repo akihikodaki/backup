@@ -43,8 +43,10 @@ export function post(request, response, next) {
 
       account.selectPerson(repository).then(async person => {
         if (request.params.acct == person.username) {
-          const activity = new ActivityStreams(request.body);
-          await activity.act(repository, person);
+          const collection = new ActivityStreams(request.body);
+          const items = await collection.getItems();
+
+          await Promise.all(items.map(item => item.act(repository, person)));
           response.sendStatus(201);
         } else {
           response.sendStatus(401);
