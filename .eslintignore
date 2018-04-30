@@ -13,6 +13,5 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 build
-/.sapper
 /app/manifest
-/node_modules
+/app/service-worker.js

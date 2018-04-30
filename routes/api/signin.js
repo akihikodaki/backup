@@ -15,13 +15,11 @@
 */
 
 import { raw } from 'body-parser';
-import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto';
-import { promisify } from 'util';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import Challenge from '../../lib/challenge';
 import cookie from './_cookie';
 
 const middleware = raw();
-const promisifiedRandomBytes = promisify(randomBytes);
 
 /*
   RFC 5802 - Salted Challenge Response Authentication Mechanism (SCRAM) SASL and GSS-API Mechanisms

@@ -15,7 +15,6 @@
 */
 
 import { parse } from 'cookie';
-import { URLSearchParams } from 'url';
 import { Server } from 'ws';
 import Cookie from '../../../lib/cookie';
 import OrderedCollection from '../../../lib/ordered_collection';
@@ -44,13 +43,18 @@ export default (repository, httpServer) => {
 
       const subscribedChannel = repository.getInboxChannel(account);
 
+      function listen(publishedChannel, message) {
+        return connection.send(`{"@context":"https://www.w3.org/ns/activitystreams","type":"OrderedCollection","orderedItems":[${message}]}`);
+      }
+
       initialActivityStreams.body['@context'] = 'https://www.w3.org/ns/activitystreams';
       connection.send(JSON.stringify(initialActivityStreams.body));
 
-      await repository.subscribe(subscribedChannel,
-        (publishedChannel, message) => connection.send(`{"@context":"https://www.w3.org/ns/activitystreams","type":"OrderedCollection","orderedItems":[${message}]}`));
+      await repository.subscribe(subscribedChannel, listen);
 
-      connection.on('close', () => repository.unsubscribe(subscribedChannel));
+      connection.on(
+        'close',
+        () => repository.unsubscribe(subscribedChannel, listen));
     });
   });
 };
