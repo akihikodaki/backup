@@ -26,7 +26,8 @@ export default repository => {
     const key = new Key({ owner });
 
     if (await key.verifySignature(repository, data.signature)) {
-      const collection = new ActivityStreams(JSON.parse(data.body));
+      const { host } = new URL(keyId);
+      const collection = new ActivityStreams(JSON.parse(data.body), { host });
       const items = await collection.getItems();
 
       await Promise.all(items.map(item =>
