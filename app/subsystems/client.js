@@ -20,21 +20,6 @@ import { routes } from '../manifest/client';
 
 export default node => init(node, routes, {
   store(data) {
-    const store = new Store(data);
-
-    if (process.browser) {
-      const refreshToken = localStorage.getItem(store.get('refreshTokenKey'));
-
-      if (refreshToken) {
-        const username = localStorage.getItem(store.get('usernameKey'));
-
-        store.oauth(fetch, username, {
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken
-        });
-      }
-    }
-
-    return store;
+    return new Store(data);
   }
 });

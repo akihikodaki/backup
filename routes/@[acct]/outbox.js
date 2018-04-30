@@ -14,10 +14,11 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { parse } from 'cookie';
 import { json } from 'express';
-import ActivityStreams from '../../lib/activitystreams';
+import ActivityStreams, { TypeNotAllowed } from '../../lib/activitystreams';
+import Cookie from '../../lib/cookie';
 import OrderedCollection from '../../lib/ordered_collection';
-import OauthOwner from '../../lib/oauth/owner';
 
 const middleware = json({
   type: ['application/activity+json', 'application/ld+json']
@@ -37,32 +38,33 @@ export function get({ params, repository }, response, next) {
 }
 
 export function post(request, response, next) {
-  OauthOwner.middleware(request, response, () => {
-    middleware(request, response, () => {
-      const { account, repository } = request;
+  const { activenode } = parse(request.headers.cookie);
+  const digest = Cookie.digest(Cookie.parseToken(activenode));
 
-      account.selectPerson(repository).then(async person => {
-        if (request.params.acct == person.username) {
-          const collection = new ActivityStreams(request.body);
-          const items = await collection.getItems();
+  request.repository.selectPersonByDigestOfCookie(digest).then(person => {
+    if (person.username.toLowerCase() != request.params.acct.toLowerCase()) {
+      response.sendStatus(401);
+    }
 
-          await Promise.all(items.map(item =>
-            item.act(repository, person).catch(error => {
-              if (error instanceof TypeNotAllowed) {
-                return item.create(repository, person).catch(error => {
-                  if (!(error instanceof TypeNotAllowed)) {
-                    throw error;
-                  }
-                });
+    middleware(request, response, error => {
+      if (error) {
+        next(error);
+        return;
+      }
+
+      const collection = new ActivityStreams(request.body);
+      collection.getItems().then(items => Promise.all(items.map(item =>
+        item.act(request.repository, person).catch(error => {
+          if (error instanceof TypeNotAllowed) {
+            return item.create(request.repository, person).catch(error => {
+              if (!(error instanceof TypeNotAllowed)) {
+                throw error;
               }
+            });
+          }
 
-              throw error;
-            })));
-          response.sendStatus(201);
-        } else {
-          response.sendStatus(401);
-        }
-      }).catch(next);
+          throw error;
+        })))).then(() => response.sendStatus(201), next);
     });
-  });
+  }).catch(next);
 }

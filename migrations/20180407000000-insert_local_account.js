@@ -14,12 +14,12 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.runSql(`CREATE FUNCTION insert_local_account(username TEXT, private_key_pem TEXT, salt BYTEA, password BYTEA)
+exports.up = (db, callback) => db.runSql(`CREATE FUNCTION insert_local_account(username TEXT, admin BOOLEAN, private_key_pem TEXT, salt BYTEA, server_key BYTEA, stored_key BYTEA)
 RETURNS INTEGER AS $$
   DECLARE person_id INTEGER;
   BEGIN
     INSERT INTO persons (username, host) VALUES ($1, '') RETURNING id INTO person_id;
-    INSERT INTO local_accounts (person_id, private_key_pem, salt, password) VALUES (person_id, $2, $3, $4);
+    INSERT INTO local_accounts (person_id, admin, private_key_pem, salt, server_key, stored_key) VALUES (person_id, $2, $3, $4, $5, $6);
     RETURN person_id;
   END
 $$ LANGUAGE plpgsql`, callback);

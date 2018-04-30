@@ -35,11 +35,7 @@
 
         event.preventDefault();
 
-        this.store.oauth(fetch, username, {
-          grant_type: 'password',
-          username,
-          password
-        });
+        this.store.signin(fetch, username, password);
       },
 
       signup(event) {
@@ -47,7 +43,7 @@
         const password = event.target.elements.password.value;
 
         event.preventDefault();
-        this.store.signup(fetch, username, { username, password });
+        this.store.signup(fetch, username, password);
       }
     }
   };

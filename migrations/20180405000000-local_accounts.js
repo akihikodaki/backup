@@ -30,9 +30,11 @@ exports.up = (db, callback) => db.createTable('local_accounts', {
       mapping: 'id',
     }
   },
+  admin: { type: 'boolean', notNull: true },
   private_key_pem: { type: 'string', notNull: true },
   salt: { type: 'bytea', notNull: true },
-  password: { type: 'bytea', notNull: true }
+  server_key: { type: 'bytea', notNull: true },
+  stored_key: { type: 'bytea', notNull: true }
 }, callback);
 
 exports._meta = { version: 1 };

@@ -14,8 +14,8 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-exports.up = (db, callback) => db.createTable('refresh_tokens', {
-  id: { type: 'int', autoIncrement: true, notNull: true, primaryKey: true },
+exports.up = (db, callback) => db.createTable('cookies', {
+  digest: { type: 'bytea', notNull: true, primaryKey: true },
   person_id: {
     type: 'int',
     notNull: true,
@@ -25,9 +25,7 @@ exports.up = (db, callback) => db.createTable('refresh_tokens', {
       rules: { onDelete: 'CASCADE', onUpdate: 'CASCADE' },
       mapping: 'id',
     }
-  },
-  secret: { type: 'bytea', notNull: true },
-  digest: { type: 'bytea', notNull: true }
+  }
 }, callback);
 
 exports._meta = { version: 1 };

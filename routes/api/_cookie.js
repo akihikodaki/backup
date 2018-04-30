@@ -14,11 +14,20 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-export function postOutbox(fetch, body) {
-  return fetch(this.get('user').outbox, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/activity+json' },
-    body: JSON.stringify(body)
+import { randomBytes } from 'crypto';
+import { promisify } from 'util';
+import Cookie from '../../lib/cookie';
+
+const promisifiedRandomBytes = promisify(randomBytes);
+
+export default async (repository, account, response) => {
+  const secret = await promisifiedRandomBytes(64);
+
+  await Cookie.create(repository, account, secret);
+
+  response.cookie('activenode', Cookie.getToken(secret), {
+    httpOnly: true,
+    sameSite: 'Lax',
+    secure: true
   });
-}
+};

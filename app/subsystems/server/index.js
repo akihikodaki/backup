@@ -14,13 +14,20 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { parse } from 'cookie';
+import { randomBytes } from 'crypto';
 import { createServer } from 'http';
 import sapper from 'sapper';
+import { promisify } from 'util';
+import Challenge from '../../../lib/challenge';
+import Cookie from '../../../lib/cookie';
 import Store from '../../../lib/store';
 import { routes } from '../../manifest/server';
 import createStreaming from './streaming';
 const Arena = require('bull-arena');
 const express = require('express');
+
+const promisifiedRandomBytes = promisify(randomBytes);
 
 export default (repository, port) => {
   const application = express();
@@ -34,6 +41,47 @@ export default (repository, port) => {
       request.repository = repository;
       next();
     },
+    (request, response, next) => {
+      let asyncPerson;
+
+      if (request.headers.cookie) {
+        const { activenode } = parse(request.headers.cookie);
+        const digest = Cookie.digest(Cookie.parseToken(activenode));
+        asyncPerson = repository.selectPersonByDigestOfCookie(digest);
+      } else {
+        asyncPerson = Promise.resolve();
+      }
+
+      asyncPerson.then(async person => {
+        if (/^\/bull/i.test(request.path)) {
+          if (!person) {
+            response.sendStatus(401);
+            return;
+          }
+
+          const { admin } = await repository.selectLocalAccountByPerson(person);
+          if (!admin) {
+            response.sendStatus(401);
+            return;
+          }
+
+          next();
+        } else if (person) {
+          const { body } = await person.toActivityStreams(repository);
+          body.inbox = [];
+
+          request.nonce = null;
+          request.user = body;
+          next();
+        } else {
+          const bytes = await promisifiedRandomBytes(64);
+
+          request.nonce = Challenge.getToken(bytes);
+          request.user = null;
+          next();
+        }
+      }).catch(next);
+    },
     Arena({
       queues: [
         { hostId: repository.host, name: 'HTTP', url: repository.redis.url }
@@ -41,14 +89,8 @@ export default (repository, port) => {
     }, { basePath: '/bull', disableListen: true }),
     sapper({
       routes,
-      store() {
-        return new Store({
-          accessToken: null,
-          refreshTokenKey: 'activeNode.refreshToken',
-          user: null,
-          usernameKey: 'activeNode.username',
-          streaming: null
-        });
+      store({ nonce, user }) {
+        return new Store({ nonce, user, streaming: null });
       }
     }));
 

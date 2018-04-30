@@ -14,28 +14,27 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { urlencoded } from 'express';
+import { raw } from 'body-parser';
 import LocalAccount from '../../lib/local_account';
-import OauthServer from '../../lib/oauth/server';
+import cookie from './_cookie';
 
-const urlencodedMiddleware = urlencoded({ extended: false });
+const middleware = raw();
 
-export function post(request, response) {
-  urlencodedMiddleware(request, response, () => {
-    const { body: { username, password }, repository } = request;
+export function post(request, response, next) {
+  middleware(request, response, error => {
+    if (error) {
+      next(error);
+      return;
+    }
 
-    LocalAccount.create(repository, username, password).then(async account => {
-      const { accessToken, refreshToken } =
-        await OauthServer.issue(repository, account);
+    const { body, repository } = request;
+    const salt = body.slice(0, 64);
+    const serverKey = body.slice(64, 96);
+    const storedKey = body.slice(96, 128);
+    const username = body.slice(128).toString();
 
-      return {
-        token_type: 'Bearer',
-        access_token: accessToken,
-        refresh_token: refreshToken
-      };
-    }).then(body => response.json(body), error => {
-      console.error(error);
-      response.sendStatus(500);
-    });
+    LocalAccount.create(repository, username, false, salt, serverKey, storedKey)
+                .then(account => cookie(repository, account, response))
+                .then(() => response.sendStatus(204), next);
   });
 }

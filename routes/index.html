@@ -25,18 +25,5 @@
 
   export default {
     components: { Dashboard, Landing },
-    oncreate() {
-      const refreshToken =
-        localStorage.getItem(this.store.get('refreshTokenKey'));
-
-      if (refreshToken != null) {
-        const username = localStorage.getItem(this.store.get('usernameKey'));
-
-        this.store.oauth(fetch, username, {
-          grant_type: 'refresh_token',
-          refresh_token: refreshToken
-        });
-      }
-    }
   };
 </script>

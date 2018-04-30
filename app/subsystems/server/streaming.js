@@ -14,9 +14,10 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { parse } from 'cookie';
 import { URLSearchParams } from 'url';
 import { Server } from 'ws';
-import OauthOwner from '../../../lib/oauth/owner';
+import Cookie from '../../../lib/cookie';
 import OrderedCollection from '../../../lib/ordered_collection';
 
 export default (repository, httpServer) => {
@@ -24,17 +25,11 @@ export default (repository, httpServer) => {
     path: '/api/streaming',
     server: httpServer,
     verifyClient({ req }, done) {
-      const token =
-        OauthOwner.parseAuthorization(req) ||
-          new URLSearchParams(/\?.*/.exec(req.url)[0]).get('access_token');
+      const secret = Cookie.parseToken(parse(req.headers.cookie).activenode);
 
-      OauthOwner.authenticate(repository, token).then(account => {
-        req.account = account;
-        done(account);
-      }, error => {
-        repository.console.error(error);
-        done()
-      });
+      repository.selectLocalAccountByDigestOfCookie(Cookie.digest(secret))
+                .then(account => req.account = account)
+                .then(() => done(req.account));
     },
   });
 
