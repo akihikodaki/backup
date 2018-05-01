@@ -64,39 +64,34 @@ ka4wL4+Pn6kvt+9NH+dYHZAY2elf5rPWDCpOjcVw3lKXKCv0jp9nwU4svGxiB0te
 });
 
 describe('generate', () => {
-  const { status, stdout } = spawnSync('openssl', [
-    'rsa',
-    '-inform',
-    'PEM',
-    '-noout',
-    '-text'
-  ], { encoding: 'utf8', input: generate() });
-
   /*
     Mastodon expects RSA.
 
     HTTP signatures (#4146) · tootsuite/mastodon@1618b68
     https://github.com/tootsuite/mastodon/commit/1618b68bfa740ed655ac45d7d5f4f46fed6c8c62
   */
-  test('returns key acceptable as RSA encoded in PEM', () => {
+  test('returns a new key', () => {
+    const { status, stdout } = spawnSync('openssl', [
+      'rsa',
+      '-inform',
+      'PEM',
+      '-noout',
+      '-text'
+    ], { encoding: 'utf8', input: generate() });
+
     expect(status).toBe(0);
-  });
 
-  /*
-    SP 800-78-4, Cryptographic Algorithms and Key Sizes for PIV | CSRC
-    https://doi.org/10.6028/NIST.SP.800-78-4
-  */
-  test('returns private key with 2048 bits', () => {
-    expect(stdout)
-      .toEqual(expect.stringContaining('Private-Key: (2048 bit)'));
-  });
+    /*
+      SP 800-78-4, Cryptographic Algorithms and Key Sizes for PIV | CSRC
+      https://doi.org/10.6028/NIST.SP.800-78-4
+    */
+    expect(stdout).toEqual(expect.stringContaining('Private-Key: (2048 bit)'));
 
-  /*
-    > In addition to the key sizes, keys must be gene rated using secure
-    > parameters. Rivest, Shamir, Adleman (RSA) keys must be generated using a
-    > public exponent of 65 537.
-  */
-  test('uses 65537 (0x10001) as public exponent', () => {
+    /*
+      > In addition to the key sizes, keys must be gene rated using secure
+      > parameters. Rivest, Shamir, Adleman (RSA) keys must be generated using a
+      > public exponent of 65 537.
+    */
     expect(stdout)
       .toEqual(expect.stringContaining('publicExponent: 65537 (0x10001)'));
   });
