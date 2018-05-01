@@ -23,7 +23,7 @@ const repository = new Repository({
   host: process.env.HOST,
   origin: process.env.ORIGIN,
   pg: new Pool,
-  redis: process.env.REDIS
+  redis: [process.env.REDIS]
 });
 
 processJobs(repository);

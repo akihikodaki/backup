@@ -18,6 +18,11 @@ import { spawnSync } from 'child_process';
 import { extractPublic, generate } from './build/Release/key';
 
 describe('extractPublic', () => {
+  test('rejects malformed characters', () => {
+    expect(() => extractPublic('不正な文字'))
+      .toThrow('Malformed character found');
+  });
+
   test('extracts public key in PEM from private key in PEM', () => {
     expect(extractPublic(`-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEA0Rdj53hR4AdsiRcqt1zdgQHfIIJEmJ01vbALJaZXq951JSGT
@@ -59,10 +64,13 @@ ka4wL4+Pn6kvt+9NH+dYHZAY2elf5rPWDCpOjcVw3lKXKCv0jp9nwU4svGxiB0te
 });
 
 describe('generate', () => {
-  const { status, stdout } = spawnSync('openssl', ['rsa', '-inform', 'PEM', '-noout', '-text'], {
-    encoding: 'utf8',
-    input: generate()
-  });
+  const { status, stdout } = spawnSync('openssl', [
+    'rsa',
+    '-inform',
+    'PEM',
+    '-noout',
+    '-text'
+  ], { encoding: 'utf8', input: generate() });
 
   /*
     Mastodon expects RSA.
@@ -79,8 +87,8 @@ describe('generate', () => {
     https://doi.org/10.6028/NIST.SP.800-78-4
   */
   test('returns private key with 2048 bits', () => {
-    expect(stdout).toEqual(
-      expect.stringContaining('Private-Key: (2048 bit)'));
+    expect(stdout)
+      .toEqual(expect.stringContaining('Private-Key: (2048 bit)'));
   });
 
   /*
@@ -89,7 +97,7 @@ describe('generate', () => {
     > public exponent of 65 537.
   */
   test('uses 65537 (0x10001) as public exponent', () => {
-    expect(stdout).toEqual(
-      expect.stringContaining('publicExponent: 65537 (0x10001)'));
+    expect(stdout)
+      .toEqual(expect.stringContaining('publicExponent: 65537 (0x10001)'));
   });
 });
