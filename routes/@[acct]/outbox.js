@@ -16,7 +16,11 @@
 
 import { parse } from 'cookie';
 import { json } from 'express';
-import ActivityStreams, { TypeNotAllowed } from '../../lib/activitystreams';
+import ActivityStreams, {
+  AnyHost,
+  NoHost,
+  TypeNotAllowed
+} from '../../lib/activitystreams';
 import Cookie from '../../lib/cookie';
 import OrderedCollection from '../../lib/ordered_collection';
 
@@ -52,19 +56,28 @@ export function post(request, response, next) {
         return;
       }
 
-      const collection = new ActivityStreams(request.body);
-      collection.getItems().then(items => Promise.all(items.map(item =>
-        item.act(request.repository, person).catch(error => {
-          if (error instanceof TypeNotAllowed) {
-            return item.create(request.repository, person).catch(error => {
-              if (!(error instanceof TypeNotAllowed)) {
-                throw error;
-              }
-            });
+      const collection = new ActivityStreams(request.body, { host: AnyHost });
+      collection.getItems(repository).then(items =>
+        Promise.all(items.map(item => {
+          if (item.body == 'string') {
+            return;
           }
 
-          throw error;
-        })))).then(() => response.sendStatus(201), next);
+          delete item.body.id;
+          item.normalizedHost = NoHost;
+
+          return item.act(request.repository, person).catch(error => {
+            if (error instanceof TypeNotAllowed) {
+              return item.create(request.repository, person).catch(error => {
+                if (!(error instanceof TypeNotAllowed)) {
+                  throw error;
+                }
+              });
+            }
+
+            throw error;
+          });
+        }))).then(() => response.sendStatus(201), next);
     });
   }).catch(next);
 }

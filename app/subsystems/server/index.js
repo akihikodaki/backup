@@ -42,11 +42,11 @@ export default (repository, port) => {
       next();
     },
     (request, response, next) => {
+      const cookie = request.headers.cookie && parse(request.headers.cookie);
       let asyncPerson;
 
-      if (request.headers.cookie) {
-        const { activenode } = parse(request.headers.cookie);
-        const digest = Cookie.digest(Cookie.parseToken(activenode));
+      if (cookie && cookie.activenode) {
+        const digest = Cookie.digest(Cookie.parseToken(cookie.activenode));
         asyncPerson = repository.selectPersonByDigestOfCookie(digest);
       } else {
         asyncPerson = Promise.resolve();
@@ -78,6 +78,8 @@ export default (repository, port) => {
 
           request.nonce = Challenge.getToken(bytes);
           request.user = null;
+
+          await Challenge.create(repository, bytes);
           next();
         }
       }).catch(next);

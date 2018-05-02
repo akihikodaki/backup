@@ -20,8 +20,8 @@ import processJobs from './subsystems/processor';
 
 const repository = new Repository({
   console,
+  fingerHost: process.env.FINGER_HOST,
   host: process.env.HOST,
-  origin: process.env.ORIGIN,
   pg: new Pool,
   redis: [process.env.REDIS]
 });

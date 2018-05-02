@@ -85,14 +85,13 @@ describe('generate', () => {
       SP 800-78-4, Cryptographic Algorithms and Key Sizes for PIV | CSRC
       https://doi.org/10.6028/NIST.SP.800-78-4
     */
-    expect(stdout).toEqual(expect.stringContaining('Private-Key: (2048 bit)'));
+    expect(stdout).toMatch('Private-Key: (2048 bit)');
 
     /*
       > In addition to the key sizes, keys must be gene rated using secure
       > parameters. Rivest, Shamir, Adleman (RSA) keys must be generated using a
       > public exponent of 65 537.
     */
-    expect(stdout)
-      .toEqual(expect.stringContaining('publicExponent: 65537 (0x10001)'));
+    expect(stdout).toMatch('publicExponent: 65537 (0x10001)');
   });
 });

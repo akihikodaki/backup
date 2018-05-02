@@ -35,6 +35,7 @@
     "http-signature": "^1.2.0",
     "ioredis": "^3.2.2",
     "nan": "^2.10.0",
+    "node-fetch": "^2.1.2",
     "pg": "^7.4.1",
     "sapper": "file:../sapper/sapper-0.10.5.tgz",
     "svelte": "^1.57.3",

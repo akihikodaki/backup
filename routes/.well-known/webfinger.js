@@ -20,7 +20,7 @@ export function get({ query, repository }, response) {
   const lowerResource = query.resource.toLowerCase();
   const [, userpart, host] = /(?:acct:)?(.*)@(.*)/.exec(lowerResource);
 
-  if (toUnicode(host) != repository.host.toLowerCase()) {
+  if (toUnicode(host) != repository.fingerHost.toLowerCase()) {
     response.sendStatus(404);
     return;
   }

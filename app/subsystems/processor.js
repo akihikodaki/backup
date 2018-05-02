@@ -18,6 +18,7 @@ import { globalAgent } from 'https';
 import ActivityStreams, { TypeNotAllowed } from '../../lib/activitystreams';
 import Key from '../../lib/key';
 import Person from '../../lib/person';
+import URI from '../../lib/uri';
 
 export default repository => {
   repository.queue.process(globalAgent.maxFreeSockets, async ({ data }) => {
@@ -27,8 +28,10 @@ export default repository => {
 
     if (await key.verifySignature(repository, data.signature)) {
       const { host } = new URL(keyId);
-      const collection = new ActivityStreams(JSON.parse(data.body), { host });
-      const items = await collection.getItems();
+      const collection = new ActivityStreams(JSON.parse(data.body), {
+        normalizedHost: URI.normalizeHost(host)
+      });
+      const items = await collection.getItems(repository);
 
       await Promise.all(items.map(item =>
         item.act(repository, owner).catch(error => {
