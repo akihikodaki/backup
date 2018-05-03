@@ -28,9 +28,9 @@ export default repository => {
 
     if (await key.verifySignature(repository, data.signature)) {
       const { host } = new URL(keyId);
-      const collection = new ActivityStreams(JSON.parse(data.body), {
-        normalizedHost: URI.normalizeHost(host)
-      });
+      const normalizedHost = URI.normalizeHost(host);
+      const parsed = JSON.parse(data.body);
+      const collection = new ActivityStreams(parsed, normalizedHost);
       const items = await collection.getItems(repository);
 
       await Promise.all(items.map(item =>
