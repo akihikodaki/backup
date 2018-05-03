@@ -35,10 +35,12 @@ export function get({ params, repository }, response, next) {
     async orderedItems => {
       const collection = new OrderedCollection({ orderedItems });
       const { body } = await collection.toActivityStreams(repository);
+      const message = await body;
 
-      body['@context'] = 'https://www.w3.org/ns/activitystreams';
-      response.json(body);
-    }).catch(next);
+      message['@context'] = 'https://www.w3.org/ns/activitystreams';
+      return message;
+      ;
+    }).then(response.json.bind(response), next);
 }
 
 export function post(request, response, next) {

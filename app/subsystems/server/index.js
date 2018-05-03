@@ -68,10 +68,11 @@ export default (repository, port) => {
           next();
         } else if (person) {
           const { body } = await person.toActivityStreams(repository);
-          body.inbox = [];
+          const user = await body;
+          user.inbox = [];
 
           request.nonce = null;
-          request.user = body;
+          request.user = user;
           next();
         } else {
           const bytes = await promisifiedRandomBytes(64);

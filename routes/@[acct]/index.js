@@ -16,7 +16,7 @@
 
 import Person from '../../lib/person';
 
-export async function get(request, response, next) {
+export function get(request, response, next) {
   const accepted = request.accepts([
     'html',
     'application/activity+json',
@@ -29,9 +29,12 @@ export async function get(request, response, next) {
   }
 
   const { params: { acct }, repository } = request;
-  const person = await Person.resolveByAcct(repository, acct);
-  const { body } = await person.toActivityStreams(repository);
 
-  body['@context'] = 'https://www.w3.org/ns/activitystreams';
-  return response.json(body);
+  Person.resolveByAcct(repository, acct).then(async person => {
+    const { body } = await person.toActivityStreams(repository);
+    const message = await body;
+
+    message['@context'] = 'https://www.w3.org/ns/activitystreams';
+    return message;
+  }, response.json.bind(response), next);
 }

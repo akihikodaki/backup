@@ -38,8 +38,8 @@ export default (repository, httpServer) => {
         orderedItems: notes.reverse()
       });
 
-      const initialActivityStreams =
-        await initialCollection.toActivityStreams(repository);
+      const { body } = await initialCollection.toActivityStreams(repository);
+      const resolved = await body;
 
       const subscribedChannel = repository.getInboxChannel(account);
 
@@ -47,8 +47,8 @@ export default (repository, httpServer) => {
         return connection.send(`{"@context":"https://www.w3.org/ns/activitystreams","type":"OrderedCollection","orderedItems":[${message}]}`);
       }
 
-      initialActivityStreams.body['@context'] = 'https://www.w3.org/ns/activitystreams';
-      connection.send(JSON.stringify(initialActivityStreams.body));
+      resolved['@context'] = 'https://www.w3.org/ns/activitystreams';
+      connection.send(JSON.stringify(resolved));
 
       await repository.subscribe(subscribedChannel, listen);
 
