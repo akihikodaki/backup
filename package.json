@@ -11,7 +11,7 @@
     "install": "node-gyp -C key rebuild",
     "prepare": "sapper build",
     "start": "sapper start",
-    "test": "jest"
+    "test": "jest --env=node"
   },
   "repository": {
     "type": "git",

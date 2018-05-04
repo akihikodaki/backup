@@ -22,7 +22,7 @@ exports.up = (db, callback) => db.createTable('persons', {
   if (error) {
     callback(error);
   } else {
-    db.runSql('CREATE UNIQUE INDEX persons_acct ON persons (lower(host), lower(username))', callback);
+    db.runSql('CREATE UNIQUE INDEX persons_acct ON persons (lower(host), username)', callback);
   }
 });
 

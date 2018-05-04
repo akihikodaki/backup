@@ -14,20 +14,20 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { toUnicode } from 'punycode';
+import URI from '../../lib/uri';
 
 export function get({ query, repository }, response) {
-  const lowerResource = query.resource.toLowerCase();
+  const lowerResource = query.resource;
   const [, userpart, host] = /(?:acct:)?(.*)@(.*)/.exec(lowerResource);
 
-  if (toUnicode(host) != repository.fingerHost.toLowerCase()) {
+  if (URI.normalizeHost(host) != URI.normalizeHost(repository.fingerHost)) {
     response.sendStatus(404);
     return;
   }
 
   const username = decodeURI(userpart);
 
-  repository.selectLocalAccountByLowerUsername(username).then(async account => {
+  repository.selectLocalAccountByUsername(username).then(async account => {
     response.json(await account.toWebFinger(repository));
   }).catch(error => {
     console.error(error);

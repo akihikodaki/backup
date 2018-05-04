@@ -15,6 +15,7 @@
 */
 
 import Person from '../../lib/person';
+import URI from '../../lib/uri';
 
 export function get(request, response, next) {
   const accepted = request.accepts([
@@ -28,13 +29,19 @@ export function get(request, response, next) {
     return;
   }
 
-  const { params: { acct }, repository } = request;
+  const { params, repository } = request;
+  const [username, host] = /(.*)@(.*)/.exec(decodeURIComponent(params.acct));
+  const normalizedHost = URI.normalizeHost(host);
 
-  Person.resolveByAcct(repository, acct).then(async person => {
+  Person.resolveByUsernameAndNormalizedHost(repository, username, normalizedHost).then(async person => {
     const { body } = await person.toActivityStreams(repository);
     const message = await body;
 
-    message['@context'] = 'https://www.w3.org/ns/activitystreams';
+    message['@context'] = [
+      'https://w3id.org/security/v1',
+      'https://www.w3.org/ns/activitystreams'
+    ];
+
     return message;
   }, response.json.bind(response), next);
 }

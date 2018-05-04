@@ -23,24 +23,25 @@ import ActivityStreams, {
 } from '../../lib/activitystreams';
 import Cookie from '../../lib/cookie';
 import OrderedCollection from '../../lib/ordered_collection';
+import { URI } from '../../lib/uri';
 
 const middleware = json({
   type: ['application/activity+json', 'application/ld+json']
 });
 
 export function get({ params, repository }, response, next) {
-  const [userpart, host] = params.acct.toLowerCase().split('@', 2);
+  const [userpart, host] = params.acct.split('@', 2);
+  const normalizedHost = URI.normalizeHost(host);
 
-  repository.selectRecentNotesByLowerUsernameAndHost(userpart, host).then(
-    async orderedItems => {
-      const collection = new OrderedCollection({ orderedItems });
-      const { body } = await collection.toActivityStreams(repository);
-      const message = await body;
+  repository.selectRecentNotesByUsernameAndNormalizedHost(userpart, normalizedHost)
+            .then(async orderedItems => {
+              const collection = new OrderedCollection({ orderedItems });
+              const { body } = await collection.toActivityStreams(repository);
+              const message = await body;
 
-      message['@context'] = 'https://www.w3.org/ns/activitystreams';
-      return message;
-      ;
-    }).then(response.json.bind(response), next);
+              message['@context'] = 'https://www.w3.org/ns/activitystreams';
+              return message;
+            }).then(response.json.bind(response), next);
 }
 
 export function post(request, response, next) {
@@ -48,7 +49,7 @@ export function post(request, response, next) {
   const digest = Cookie.digest(Cookie.parseToken(miniverse));
 
   request.repository.selectPersonByDigestOfCookie(digest).then(person => {
-    if (person.username.toLowerCase() != request.params.acct.toLowerCase()) {
+    if (person.username != request.params.acct) {
       response.sendStatus(401);
     }
 

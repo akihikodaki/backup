@@ -80,8 +80,8 @@ export function post(request, response, next) {
           return;
         }
 
-        const account = await repository.selectLocalAccountByLowerUsername(
-          username.toString().toLowerCase());
+        const account = await repository.selectLocalAccountByUsername(
+          username.toString());
 
         const auth = Buffer.concat([nonce, account.salt]);
         const clientKey = hmac(account.storedKey, auth);
