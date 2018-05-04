@@ -1,9 +1,9 @@
 {
-  "name": "activenode",
+  "name": "miniverse",
   "version": "0.0.0",
-  "description": "ActiveNode is a microblogging software.",
+  "description": "Miniverse is a microblogging software.",
   "bin": {
-    "activenode": "./index.sh"
+    "miniverse": "./index.sh"
   },
   "scripts": {
     "dev": "sapper dev",
@@ -15,14 +15,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/akihikodaki/activenode.git"
+    "url": "git+https://github.com/miniorg/miniverse.git"
   },
   "author": "Akihiko Odaki <nekomanma@pixiv.co.jp>",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/akihikodaki/activenode/issues"
+    "url": "https://github.com/miniorg/miniverse/issues"
   },
-  "homepage": "https://github.com/akihikodaki/activenode#readme",
+  "homepage": "https://github.com/miniorg/miniverse#readme",
   "dependencies": {
     "base64url": "^2.0.0",
     "body-parser": "^1.18.2",
@@ -37,7 +37,7 @@
     "nan": "^2.10.0",
     "node-fetch": "^2.1.2",
     "pg": "^7.4.1",
-    "sapper": "file:../sapper/sapper-0.10.5.tgz",
+    "sapper": "https://github.com/miniorg/sapper/releases/download/v0.10.5-miniverse-r0/sapper-0.10.5.tgz",
     "svelte": "^1.57.3",
     "webfinger.js": "^2.6.6",
     "ws": "^5.1.1"

@@ -25,7 +25,7 @@ export default async (repository, account, response) => {
 
   await Cookie.create(repository, account, secret);
 
-  response.cookie('activenode', Cookie.getToken(secret), {
+  response.cookie('miniverse', Cookie.getToken(secret), {
     httpOnly: true,
     sameSite: 'Lax',
     secure: true

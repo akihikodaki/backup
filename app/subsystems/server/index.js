@@ -45,8 +45,8 @@ export default (repository, port) => {
       const cookie = request.headers.cookie && parse(request.headers.cookie);
       let asyncPerson;
 
-      if (cookie && cookie.activenode) {
-        const digest = Cookie.digest(Cookie.parseToken(cookie.activenode));
+      if (cookie && cookie.miniverse) {
+        const digest = Cookie.digest(Cookie.parseToken(cookie.miniverse));
         asyncPerson = repository.selectPersonByDigestOfCookie(digest);
       } else {
         asyncPerson = Promise.resolve();

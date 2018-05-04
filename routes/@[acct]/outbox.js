@@ -44,8 +44,8 @@ export function get({ params, repository }, response, next) {
 }
 
 export function post(request, response, next) {
-  const { activenode } = parse(request.headers.cookie);
-  const digest = Cookie.digest(Cookie.parseToken(activenode));
+  const { miniverse } = parse(request.headers.cookie);
+  const digest = Cookie.digest(Cookie.parseToken(miniverse));
 
   request.repository.selectPersonByDigestOfCookie(digest).then(person => {
     if (person.username.toLowerCase() != request.params.acct.toLowerCase()) {

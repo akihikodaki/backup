@@ -24,7 +24,7 @@ export default (repository, httpServer) => {
     path: '/api/streaming',
     server: httpServer,
     verifyClient({ req }, done) {
-      const secret = Cookie.parseToken(parse(req.headers.cookie).activenode);
+      const secret = Cookie.parseToken(parse(req.headers.cookie).miniverse);
 
       repository.selectLocalAccountByDigestOfCookie(Cookie.digest(secret))
                 .then(account => req.account = account)
