@@ -15,4 +15,5 @@
 build
 /.sapper
 /app/manifest
+/assets/license-main.html
 /node_modules

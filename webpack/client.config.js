@@ -15,6 +15,8 @@
 */
 
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const LicenseInfoWebpackPlugin = require('license-info-webpack-plugin').default;
+const { resolve } = require('path');
 const { DefinePlugin, HotModuleReplacementPlugin } = require('webpack');
 const { client } = require('sapper/webpack/config');
 
@@ -46,6 +48,10 @@ module.exports = {
     new DefinePlugin({
       'process.browser': true,
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+    }),
+    new LicenseInfoWebpackPlugin({
+      output: 'html',
+      outputPath: 'assets'
     })
   ]
 };

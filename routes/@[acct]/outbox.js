@@ -23,7 +23,7 @@ import ActivityStreams, {
 } from '../../lib/activitystreams';
 import Cookie from '../../lib/cookie';
 import OrderedCollection from '../../lib/ordered_collection';
-import { URI } from '../../lib/uri';
+import URI from '../../lib/uri';
 
 const middleware = json({
   type: ['application/activity+json', 'application/ld+json']
@@ -45,11 +45,14 @@ export function get({ params, repository }, response, next) {
 }
 
 export function post(request, response, next) {
-  const { miniverse } = parse(request.headers.cookie);
+  const { headers, params, repository } = request;
+  const { miniverse } = parse(headers.cookie);
   const digest = Cookie.digest(Cookie.parseToken(miniverse));
 
-  request.repository.selectPersonByDigestOfCookie(digest).then(person => {
-    if (person.username != request.params.acct) {
+  repository.selectLocalAccountByDigestOfCookie(digest).then(async account => {
+    const person = await account.selectPerson(repository);
+
+    if (person.username != params.acct) {
       response.sendStatus(401);
     }
 
@@ -69,9 +72,9 @@ export function post(request, response, next) {
           delete item.body.id;
           item.normalizedHost = NoHost;
 
-          return item.act(request.repository, person).catch(error => {
+          return item.act(repository, person).catch(error => {
             if (error instanceof TypeNotAllowed) {
-              return item.create(request.repository, person).catch(error => {
+              return item.create(repository, person).catch(error => {
                 if (!(error instanceof TypeNotAllowed)) {
                   throw error;
                 }
