@@ -33,6 +33,9 @@ matrix:
         - initdb -D /usr/local/var/postgres
         - pg_ctl -D /usr/local/var/postgres start
         - redis-server --daemonize yes
+      cache:
+        directories:
+          - $HOME/Library/Caches/Homebrew
 services:
   - redis-server
 cache:
