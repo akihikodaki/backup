@@ -30,7 +30,8 @@ matrix:
       before_install:
         - brew install redis
       before_script:
-        - pg_ctl -D /usr/local/var/postgres start
+        - initdb
+        - pg_ctl start
         - redis-server --daemonize yes
 services:
   - redis-server
