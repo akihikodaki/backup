@@ -4,15 +4,20 @@ matrix:
     - os: linux
       dist: trusty
       sudo: false
+      addons:
+        postgresql: 10
+        postgresql: 9.6
+        postgresql: 9.5
+        postgresql: 9.4
+        postgresql: 9.3
       services:
-        - postgresql
         - redis-server
     - os: osx
       before_install:
         - brew install redis
       before_script:
         - pg_ctl -D /usr/local/var/postgres start
-        - redis-server --daemonize
+        - redis-server --daemonize yes
 cache:
   directories:
     - node_modules
