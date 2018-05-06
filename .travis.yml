@@ -4,10 +4,13 @@ matrix:
     - os: linux
       dist: trusty
       sudo: false
+      services:
+        - postgresql
+        - redis-server
     - os: osx
-services:
-  - postgresql
-  - redis-server
+      before_script:
+        - pg_ctl -D /usr/local/var/postgres start
+        - redis-server --daemonize
 cache:
   directories:
     - node_modules
