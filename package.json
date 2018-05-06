@@ -17,7 +17,6 @@
     "type": "git",
     "url": "git+https://github.com/miniorg/miniverse.git"
   },
-  "author": "Akihiko Odaki <nekomanma@pixiv.co.jp>",
   "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/miniorg/miniverse/issues"
