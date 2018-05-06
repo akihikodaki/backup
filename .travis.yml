@@ -8,6 +8,8 @@ matrix:
         - postgresql
         - redis-server
     - os: osx
+      before_install:
+        - brew install redis
       before_script:
         - pg_ctl -D /usr/local/var/postgres start
         - redis-server --daemonize
