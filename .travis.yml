@@ -6,22 +6,16 @@ matrix:
       sudo: false
       addons:
         postgresql: 10
-      services:
-        - redis-server
     - os: linux
       dist: trusty
       sudo: false
       addons:
         postgresql: 9.6
-      services:
-        - redis-server
     - os: linux
       dist: trusty
       sudo: false
       addons:
         postgresql: 9.5
-      services:
-        - redis-server
     - os: linux
       dist: trusty
       sudo: false
@@ -32,16 +26,14 @@ matrix:
       sudo: false
       addons:
         postgresql: 9.3
-      services:
-        - redis-server
-      services:
-        - redis-server
     - os: osx
       before_install:
         - brew install redis
       before_script:
         - pg_ctl -D /usr/local/var/postgres start
         - redis-server --daemonize yes
+services:
+  - redis-server
 cache:
   directories:
     - node_modules
