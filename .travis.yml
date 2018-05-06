@@ -1,7 +1,9 @@
+stages:
+  - name: deploy
+    if: branch = master
 language: node_js
 jobs:
   include:
-  - if: branch = master
   - stage: deploy
     os: linux
     dist: trusty
