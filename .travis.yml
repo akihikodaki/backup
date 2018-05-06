@@ -28,8 +28,9 @@ matrix:
         - rm -r /usr/local/var/postgres
         - initdb -D /usr/local/var/postgres
         - pg_ctl -D /usr/local/var/postgres start
-        - createuser
         - redis-server --daemonize yes
+        - pg_isready
+        - createuser
       cache:
         directories:
           - $HOME/Library/Caches/Homebrew
