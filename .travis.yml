@@ -1,5 +1,10 @@
 language: node_js
-sudo: false
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: false
+    - os: osx
 services:
   - postgresql
   - redis-server
