@@ -9,5 +9,8 @@ cache:
 node_js:
   - lts/*
   - node
+before_script:
+  - createdb travis_miniverse_test_1
+  - npx db-migrate up
 script:
   - npm test -- -w 1
