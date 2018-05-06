@@ -6,10 +6,34 @@ matrix:
       sudo: false
       addons:
         postgresql: 10
+      services:
+        - redis-server
+    - os: linux
+      dist: trusty
+      sudo: false
+      addons:
         postgresql: 9.6
+      services:
+        - redis-server
+    - os: linux
+      dist: trusty
+      sudo: false
+      addons:
         postgresql: 9.5
+      services:
+        - redis-server
+    - os: linux
+      dist: trusty
+      sudo: false
+      addons:
         postgresql: 9.4
+    - os: linux
+      dist: trusty
+      sudo: false
+      addons:
         postgresql: 9.3
+      services:
+        - redis-server
       services:
         - redis-server
     - os: osx
