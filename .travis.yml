@@ -1,4 +1,12 @@
 language: node_js
+jobs:
+  include:
+  - if: branch = master
+  - stage: deploy
+    os: linux
+    dist: trusty
+    script: echo hello
+    sudo: false
 matrix:
   include:
     - os: linux
