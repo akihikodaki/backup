@@ -1,0 +1,13 @@
+language: node_js
+sudo: false
+services:
+  - postgresql
+  - redis-server
+cache:
+  directories:
+    - node_modules
+node_js:
+  - lts/*
+  - node
+script:
+  - npm test -- -w 1
