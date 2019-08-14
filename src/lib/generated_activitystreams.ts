@@ -14,21 +14,27 @@
   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import { URL } from 'isomorphism/url';
+
+export function generateAcct({ id, preferredUsername }: Actor) {
+  return `${preferredUsername}@${(new URL(id)).host}`;
+}
+
 export interface Accept {
-  type: string;
+  type: 'Accept';
   object: Follow;
 }
 
 export interface Announce {
-  type: string;
+  type: 'Announce';
   id?: string;
-  published: Date;
-  object: string;
+  published: string;
+  object: Note;
 }
 
 export type Any = Accept | Actor | Announce | Create |
-Follow | Key | LocalActor | Note |
-OrderedCollection | OrderedCollectionPage;
+Document | Follow | Key | LocalActor |
+Note | OrderedCollection | OrderedCollectionPage;
 
 export interface Actor {
   id: string;
@@ -37,16 +43,18 @@ export interface Actor {
   summary: string;
   inbox: string;
   outbox: string;
+  type: 'Object' | 'Person';
+  'miniverse:following'?: boolean;
 }
 
 export interface Create {
-  type: string;
+  type: 'Create';
   id?: string;
   object: Document | Note;
 }
 
 export interface Document {
-  type: string;
+  type: 'Document';
   mediaType: string;
   url: string;
 }
@@ -57,59 +65,72 @@ export interface Endpoints {
 }
 
 export interface Follow {
-  type: string;
+  type: 'Follow';
   actor: string;
   object: string;
 }
 
 export interface Hashtag {
-  type: string;
+  type: 'Hashtag';
   name: string;
 }
 
 export interface Key {
   id: string;
-  type: string;
+  type: 'Key';
   owner: string;
   publicKeyPem: string;
 }
 
 export interface Like {
-  type: string;
+  type: 'Like';
   object: string;
 }
 
 export interface LocalActor extends Actor {
-  type: string;
+  type: 'Person';
   endpoints: Endpoints;
   publicKey: Key;
   'miniverse:salt': string;
 }
 
 export interface Mention {
-  type: string;
+  type: 'Mention';
   href: string;
 }
 
 export interface Note {
-  type: string;
+  type: 'Note';
   id: string;
-  published: Date;
-  attributedTo: string;
+  published: string;
+  attributedTo: Actor;
   inReplyTo: string | null;
   to: string;
   summary: string | null;
   content: string;
   attachment: Document[];
   tag: (Hashtag | Mention)[];
+  'miniverse:reaction': {
+    type: 'OrderedCollection';
+    totalItems: number;
+    'miniverse:itemType': 'Like';
+  }
 }
 
 export interface OrderedCollection {
-  type: string;
+  type: 'OrderedCollection';
   orderedItems: Any[];
 }
 
 export interface OrderedCollectionPage {
-  type: string;
+  type: 'OrderedCollectionPage';
   orderedItems: Any[];
 }
+
+export type StringifiableTo<T extends Any> = {
+  [key in keyof T]:
+    T[key] extends string ? Date | string :
+    T[key] extends Any ? StringifiableTo<T[key]> :
+    T[key] extends (infer U)[] ? (U extends Any ? StringifiableTo<U> : U)[] :
+    T[key];
+};

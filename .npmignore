@@ -13,12 +13,11 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 *
-!/__sapper__/**
 !/AUTHORS
 !/LICENSE
 !/README.md
 !/database.json
+!/dist
 !/migrations/**
 !/mini-migrate.js
-!/mini-serve.js
 !/static/**

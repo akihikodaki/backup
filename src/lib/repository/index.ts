@@ -240,6 +240,12 @@ export default class Repository implements
     signal: AbortSignal,
     recover: (error: Error & { name?: string }) => unknown
   ) => Promise<Follow>;
+  readonly selectFollowByActorAndObject!: (
+    actor: Actor,
+    object: Actor,
+    signal: AbortSignal,
+    recover: (error: Error & { name: string }) => unknown
+  ) => Promise<Follow | null>;
   readonly selectFollowIncludingActorAndObjectById!: (
     id: string,
     signal: AbortSignal,
@@ -277,7 +283,7 @@ export default class Repository implements
     recover: (error: Error & { name?: string; [conflict]: boolean }) => unknown
   ) => Promise<LocalAccount>;
   readonly insertIntoInboxes!: (
-    accountOrActors: (LocalAccount | Actor)[],
+    actors: Actor[],
     item: Status,
     signal: AbortSignal,
     recover: (error: Error & { name?: string }) => unknown

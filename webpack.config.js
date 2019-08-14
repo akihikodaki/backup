@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2018  Miniverse authors
+  Copyright (C) 2019  Miniverse authors
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU Affero General Public License as published by
@@ -16,71 +16,72 @@
 
 const LicenseChecker = require('@jetbrains/ring-ui-license-checker');
 const { join } = require('path');
-const { BannerPlugin, DefinePlugin } = require('webpack');
-const { client, server, serviceworker } = require('sapper/config/webpack');
+const { BannerPlugin } = require('webpack');
 const { dependencies } = require('./package');
 
-const extensions = ['.mjs', '.js', '.ts', '.svelte'];
-const mode = process.env.NODE_ENV;
-const dev = mode == 'development';
+const context = join(__dirname, 'src');
+const extensions = ['.ts', '.tsx', '.js'];
 
-module.exports = {
-  client: {
-    entry: client.entry(),
-    output: client.output(),
-    mode,
+const nodeExternals = Object.create(null);
+nodeExternals['isomorphism/url'] = 'commonjs url';
+nodeExternals['react-native'] = 'commonjs react-native-web';
+
+const reactNativeVectorIconsRule = {
+  test: /node_modules\/react-native-vector-icons\/.*\.js$/,
+  use: {
+    loader: 'babel-loader',
+    options: {
+      presets: ['@babel/preset-react'],
+      plugins: ['@babel/plugin-proposal-class-properties']
+    }
+  }
+};
+
+module.exports = function(env, { mode }) {
+  const browser = {
+    context,
     devtool: 'source-map',
-    resolve: {
-      alias: { isomorphism: join(__dirname, 'src/lib/isomorphism/browser') },
-      extensions
-    },
+    entry: ['react-native-vector-icons/Fonts/MaterialIcons.ttf', './app'],
     module: {
       rules: [
         {
-          test: /\.svelte$/,
-          use: {
-            loader: 'svelte-loader',
-            options: {
-              dev,
-              hydratable: true,
-              shared: true,
-
-              // Hooks for granular HMR support · Issue #2377 · sveltejs/svelte
-              // https://github.com/sveltejs/svelte/issues/2377
-              hotReload: false,
-            }
-          }
-        }, {
-          test: /\.ts$/,
+          test: /\.(ts|tsx)$/,
           use: {
             loader: 'ts-loader',
-            options: { configFile: 'browser.tsconfig.json' }
+            options: { configFile: '../browser.tsconfig.json' }
           }
-        }
-      ],
+        },
+        {
+          test: /node_modules\/react-native-vector-icons\/Fonts\/MaterialIcons\.ttf$/,
+          use: {
+            loader: 'file-loader',
+            options: { name: '[name].[ext]' }
+          }
+        },
+        reactNativeVectorIconsRule
+      ]
     },
-    plugins: [
-      new DefinePlugin({
-        'process.browser': true,
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
-      })
-    ]
-  },
-  server: {
-    entry: Object.assign({
-      processor: join(__dirname, './src/processor')
-    }, server.entry()),
-    output: server.output(),
-    mode,
+    output: { path: join(__dirname, 'static') },
+    resolve: {
+      alias: {
+        isomorphism: join(context, 'lib/isomorphism/browser'),
+        'react-native$': 'react-native-web'
+      },
+      extensions
+    }
+  };
+
+  const node = {
+    context,
     devtool: 'source-map',
+    entry: { process: './process', serve: './serve' },
     externals(_context, request, callback) {
-      if (request == 'svelte/store.mjs') {
-        return callback(null, 'commonjs svelte/store');
+      const external = nodeExternals[request];
+      if (external) {
+        return callback(null, external);
       }
 
-      if (request in dependencies ||
-        request == 'encoding' ||
-        request.startsWith('encoding/')) {
+      if (request in dependencies) {
         return callback(null, 'commonjs ' + request);
       }
 
@@ -92,70 +93,34 @@ module.exports = {
 
       callback();
     },
-    resolve: {
-      alias: { isomorphism: join(__dirname, 'src/lib/isomorphism/node') },
-      extensions
-    },
-    target: 'node',
     module: {
       rules: [
         {
-          test: /\.mjs$/,
-          include: join(__dirname, 'src'),
-          type: 'javascript/auto'
+          test: /\.(ts|tsx)$/,
+          use: {
+            loader: 'ts-loader',
+            options: { configFile: '../node.tsconfig.json' }
+          }
         },
-        {
-          test: /\.svelte$/,
-          use: {
-            loader: 'svelte-loader',
-            options: {
-              css: false,
-              dev,
-              generate: 'ssr'
-            }
-          }
-        }, {
-          test: /\.ts$/,
-          include: join(__dirname, 'src/lib/session'),
-          use: {
-            loader: 'ts-loader',
-            options: {
-              configFile: 'node-session.tsconfig.json',
-              instance: 'session'
-            }
-          }
-        }, {
-          test: /\.ts$/,
-          exclude: join(__dirname, 'src/lib/session'),
-          use: {
-            loader: 'ts-loader',
-            options: { configFile: 'node.tsconfig.json' }
-          }
-        }
+        reactNativeVectorIconsRule
       ]
     },
-    plugins: [
-      new BannerPlugin({
-        banner: '#!/usr/bin/env node',
-        raw: true,
-        test: /^processor\.js$/
-      })
-    ]
-  },
-  serviceworker: {
-    entry: serviceworker.entry(),
-    output: serviceworker.output(),
-    mode: process.env.NODE_ENV,
-    devtool: 'source-map'
-  }
-};
+    node: false,
+    plugins: [new BannerPlugin({ banner: '#!/usr/bin/env node', raw: true })],
+    resolve: {
+      alias: { isomorphism: join(context, 'lib/isomorphism/node') },
+      extensions
+    },
+    target: 'node'
+  };
 
-if (dev) {
-  // Hooks for granular HMR support · Issue #2377 · sveltejs/svelte
-  // https://github.com/sveltejs/svelte/issues/2377
-  // module.exports.client.plugins.push(new HotModuleReplacementPlugin);
-} else {
-  module.exports.client.plugins.push(new LicenseChecker({
-    filename: '../../../static/license.html'
-  }));
-}
+  if (mode == 'production') {
+    browser.plugins = [
+      new LicenseChecker({
+        filename: './license.html'
+      })
+    ];
+  }
+
+  return [browser, node];
+};

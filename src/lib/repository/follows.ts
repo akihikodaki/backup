@@ -59,6 +59,27 @@ export default class {
     return new Follow({ repository: this, id, actor, object });
   }
 
+  async selectFollowByActorAndObject(
+    this: Repository,
+    actor: Actor,
+    object: Actor,
+    signal: AbortSignal,
+    recover: (error: Error & { name: string }) => unknown
+  ) {
+    const { rows } = await this.pg.query({
+      name: 'selectFollowByActorAndObject',
+      text: 'SELECT id FROM follows WHERE actor_id = $1 AND object_id = $2',
+      values: [actor.id, object.id]
+    }, signal, error => error.name == 'AbortError' ? recover(error) : error);
+
+    return rows[0] ? new Follow({
+      repository: this,
+      id: rows[0].id,
+      actor,
+      object
+    }) : null;
+  }
+
   async selectFollowIncludingActorAndObjectById(
     this: Repository,
     id: string,

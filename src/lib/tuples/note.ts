@@ -19,7 +19,8 @@ import { domainToASCII, domainToUnicode } from 'url';
 import {
   Note as ActivityStreams,
   Hashtag as ActivityStreamsHashtag,
-  Mention as ActivityStreamsMention
+  Mention as ActivityStreamsMention,
+  StringifiableTo as ActivityStreamsStringifiableTo
 } from '../generated_activitystreams';
 import ParsedActivityStreams, { noHost } from '../parsed_activitystreams';
 import Repository, { conflict } from '../repository';
@@ -66,6 +67,7 @@ async function tryToResolveLocalNoteByURI(
 
 type Properties = ({ id: string } | { id?: string; status: Status }) & {
   inReplyToId: string | null;
+  likes: number;
   summary: string | null;
   content: string;
 };
@@ -213,6 +215,7 @@ export interface Seed {
 export default class Note extends Relation<Properties, References> {
   readonly id!: string;
   readonly inReplyToId!: string | null;
+  readonly likes!: number;
   readonly status?: Reference<Status>;
   readonly summary!: string | null;
   readonly content!: string;
@@ -222,8 +225,9 @@ export default class Note extends Relation<Properties, References> {
 
   async toActivityStreams(
     signal: AbortSignal,
-    recover: (error: Error & { name?: string }) => unknown
-  ): Promise<ActivityStreams> {
+    recover: (error: Error & { name?: string }) => unknown,
+    actor?: Actor
+  ): Promise<ActivityStreamsStringifiableTo<ActivityStreams>> {
     const [
       [published, [attributedToActor, attributedTo]],
       attachment,
@@ -238,12 +242,15 @@ export default class Note extends Relation<Properties, References> {
 
         return Promise.all([
           status.published,
-          status.select('actor', signal, recover).then(actor => {
-            if (!actor) {
+          status.select('actor', signal, recover).then(statusActor => {
+            if (!statusActor) {
               throw recover(new Error('status\'s actor not found.'));
             }
 
-            return Promise.all([actor, actor.getUri(signal, recover)]);
+            return Promise.all([
+              statusActor,
+              statusActor.toActivityStreams(signal, recover, actor)
+            ]);
           })
         ]);
       }),
@@ -307,7 +314,13 @@ export default class Note extends Relation<Properties, References> {
 
       // Support concat operations on arrays of different types · Issue #26378 · Microsoft/TypeScript
       // https://github.com/Microsoft/TypeScript/issues/26378
-      tag: ((hashtags as unknown) as ActivityStreamsTag[]).concat((mentions as unknown) as ActivityStreamsTag[])
+      tag: ((hashtags as unknown) as ActivityStreamsTag[]).concat((mentions as unknown) as ActivityStreamsTag[]),
+
+      'miniverse:reaction': {
+        type: 'OrderedCollection',
+        totalItems: 0,
+        'miniverse:itemType': 'Like'
+      }
     };
   }
 

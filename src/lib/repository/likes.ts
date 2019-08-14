@@ -30,7 +30,7 @@ export default class {
   ) {
     await this.pg.query({
       name: 'deleteLikeByActorAndObject',
-      text: 'DELETE FROM likes WHERE actor_id = $1 AND object_id = $2',
+      text: 'delete_like($1, $2)',
       values: [actor.id, object.id]
     }, signal, error => error.name == 'AbortError' ? recover(error) : error);
   }
@@ -43,7 +43,7 @@ export default class {
   ) {
     const { rows: [{ id }] } = await this.pg.query({
       name: 'insertLike',
-      text: 'INSERT INTO likes (actor_id, object_id) VALUES ($1, $2) RETURNING id',
+      text: 'insert_like($1, $2)',
       values: [actor.id, object.id]
     }, signal, error => {
       if (error.name == 'AbortError') {

@@ -91,9 +91,11 @@ export default class Base extends Relation<Properties, References>
 
   async toActivityStreams(
     signal: AbortSignal,
-    recover: (error: Error & { name?: string }) => unknown
-  ): Promise<ActivityStreams | LocalActivityStreams> {
+    recover: (error: Error & { name?: string }) => unknown,
+    actor?: Base
+  ): Promise<ActivityStreams> {
     const asciiHost = domainToASCII(this.repository.host);
+    let activityStreams: ActivityStreams | LocalActivityStreams;
 
     if (this.host) {
       const acct = `${this.username}@${domainToUnicode(this.host)}`;
@@ -104,51 +106,62 @@ export default class Base extends Relation<Properties, References>
         throw recover(new Error('id unresolved.'));
       }
 
-      return {
+      activityStreams = {
         id,
         preferredUsername: this.username,
         name: this.name,
         summary: this.summary,
         inbox: proxyBase + '/inbox',
-        outbox: proxyBase + '/outbox'
+        outbox: proxyBase + '/outbox',
+        type: 'Object'
+      };
+    } else {
+      const key = new Key({ owner: this, repository: this.repository });
+
+      const [id, publicKey, account] = await Promise.all([
+        this.getUri(signal, recover),
+        key.toActivityStreams(signal, recover),
+        this.select('account', signal, recover)
+      ]);
+
+      if (!account) {
+        throw recover(new Error('account not found'));
+      }
+
+      if (!(account instanceof LocalAccount)) {
+        throw new Error('Invalid account.');
+      }
+
+      if (!id) {
+        throw recover(new Error('id unresolved.'));
+      }
+
+      activityStreams = {
+        id,
+        type: 'Person',
+        preferredUsername: this.username,
+        name: this.name,
+        summary: this.summary,
+        inbox: id + '/inbox',
+        outbox: id + '/outbox',
+        endpoints: {
+          proxyUrl: `https://${asciiHost}/api/proxy`,
+          uploadMedia: `https://${asciiHost}/api/uploadMedia`
+        },
+        publicKey,
+        'miniverse:salt': account.salt.toString('base64')
       };
     }
 
-    const key = new Key({ owner: this, repository: this.repository });
-
-    const [id, publicKey, account] = await Promise.all([
-      this.getUri(signal, recover),
-      key.toActivityStreams(signal, recover),
-      this.select('account', signal, recover)
-    ]);
-
-    if (!account) {
-      throw recover(new Error('account not found'));
+    if (actor) {
+      activityStreams['miniverse:following'] = Boolean(
+        await this.repository.selectFollowByActorAndObject(
+          actor, this, signal, recover
+        )
+      );
     }
 
-    if (!(account instanceof LocalAccount)) {
-      throw new Error('Invalid account.');
-    }
-
-    if (!id) {
-      throw recover(new Error('id unresolved.'));
-    }
-
-    return {
-      id,
-      type: 'Person',
-      preferredUsername: this.username,
-      name: this.name,
-      summary: this.summary,
-      inbox: id + '/inbox',
-      outbox: id + '/outbox',
-      endpoints: {
-        proxyUrl: `https://${asciiHost}/api/proxy`,
-        uploadMedia: `https://${asciiHost}/api/uploadMedia`
-      },
-      publicKey,
-      'miniverse:salt': account.salt.toString('base64')
-    };
+    return activityStreams;
   }
 
   static readonly createFromHostAndParsedActivityStreams:

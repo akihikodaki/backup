@@ -13,6 +13,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 node_modules
-/__sapper__
+/dist
 /docker/miniverse-*.tgz
 /static/license.html

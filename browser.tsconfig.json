@@ -1,6 +1,8 @@
 {
   "extends": "./base.tsconfig",
   "compilerOptions": {
+    "paths": { "isomorphism/*": ["src/lib/isomorphism/browser/*"] },
+    "jsx": "react",
     "lib": ["es2017", "dom"],
     "types": ["webpack-env"]
   },

@@ -20,6 +20,8 @@ import Document from '../tuples/document';
 import URI from '../tuples/uri';
 import Repository, { conflict } from '.';
 
+const invalidUUID = {};
+
 function parse(this: Repository, { id, uuid, format }: {
   readonly id: string;
   readonly uuid: string;
@@ -104,19 +106,33 @@ export default class {
     return rows[0] ? parse.call(this, rows[0]) : null;
   }
 
-  async selectDocumentByUUID(
+  selectDocumentByUUID(
     this: Repository,
     uuid: string,
     signal: AbortSignal,
     recover: (error: Error & { name: string }) => unknown
   ) {
-    const { rows } = await this.pg.query({
+    return this.pg.query({
       name: 'selectDocumentByUUIDAndFormat',
       text: 'SELECT * FROM documents WHERE uuid = $1',
       values: [uuid]
-    }, signal, recover);
+    }, signal, error => {
+      if (error.code == '22P02') {
+        return invalidUUID;
+      }
 
-    return rows[0] ? parse.call(this, rows[0]) : null;
+      if (error.name == 'AbortError') {
+        return recover(error);
+      }
+
+      return error;
+    }).then(({ rows }) => rows[0] ? parse.call(this, rows[0]) : null, error => {
+      if (error == invalidUUID) {
+        return null;
+      }
+
+      throw error;
+    });
   }
 
   async selectDocumentsByAttachedNoteId(
@@ -129,7 +145,7 @@ export default class {
       name: 'selectDocumentsByAttachedNoteId',
       text: 'SELECT * FROM documents JOIN attachments ON documents.id = attachments.document_id WHERE attachments.note_id = $1',
       values: [id]
-    }, signal, recover);
+    }, signal, error => error.name == 'AbortError' ? recover(error) : error);
 
     return (rows as any[]).map(parse, this);
   }

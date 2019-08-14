@@ -16,7 +16,10 @@
 
 import { AbortSignal } from 'abort-controller';
 import { domainToASCII } from 'url';
-import { Create as ActivityStreams } from '../generated_activitystreams';
+import {
+  Create as ActivityStreams,
+  StringifiableTo
+} from '../generated_activitystreams';
 import ParsedActivityStreams from '../parsed_activitystreams';
 import Repository from '../repository';
 import { temporaryError } from '../transfer';
@@ -72,8 +75,9 @@ export default class Create extends Relation<Properties, References> {
 
   async toActivityStreams(
     signal: AbortSignal,
-    recover: (error: Error & { name?: string }) => unknown
-  ): Promise<ActivityStreams> {
+    recover: (error: Error & { name?: string }) => unknown,
+    actor?: Actor
+  ): Promise<StringifiableTo<ActivityStreams>> {
     const object = await this.select('object', signal, recover);
     if (!object) {
       throw recover(new Error('object not found.'));
@@ -89,7 +93,7 @@ export default class Create extends Relation<Properties, References> {
 
     return {
       type: 'Create',
-      object: await object.toActivityStreams(signal, recover)
+      object: await object.toActivityStreams(signal, recover, actor)
     };
   }
 

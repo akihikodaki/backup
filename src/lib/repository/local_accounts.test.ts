@@ -195,3 +195,39 @@ test('rejects when inserting local account with conflicting username', async () 
     return recovery;
   })).rejects.toBe(recovery);
 });
+
+test('rejects when inserting local account with invalid character', async () => {
+  const recover = jest.fn();
+  const recovery = {};
+
+  await repository.insertLocalAccount({
+    actor: {
+      username: '\u0000',
+      name: '',
+      summary: ''
+    },
+    admin: true,
+    privateKeyDer,
+    salt: Buffer.from(''),
+    serverKey: Buffer.from(''),
+    storedKey: Buffer.from('')
+  }, signal, recover);
+
+  expect(recover).not.toHaveBeenCalled();
+
+  await expect(repository.insertLocalAccount({
+    actor: {
+      username: 'username',
+      name: '',
+      summary: ''
+    },
+    admin: true,
+    privateKeyDer,
+    salt: Buffer.from(''),
+    serverKey: Buffer.from(''),
+    storedKey: Buffer.from('')
+  }, signal, error => {
+    expect(error[conflict]).toBe(false);
+    return recovery;
+  })).rejects.toBe(recovery);
+});

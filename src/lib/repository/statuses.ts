@@ -22,16 +22,20 @@ import Status from '../tuples/status';
 import URI from '../tuples/uri';
 import Repository from '.';
 
+const invalidRepresentation = {};
+
 function parseExtension(this: Repository, {
   id,
   announce_object_id,
   note_in_reply_to_id,
+  note_likes,
   note_summary,
   note_content
 }: {
   id: string;
   announce_object_id: null | string;
   note_in_reply_to_id: null | string;
+  note_likes: number;
   note_summary: string;
   note_content: string;
 }) {
@@ -42,6 +46,7 @@ function parseExtension(this: Repository, {
       repository: this,
       id: announce_object_id,
       inReplyToId: note_in_reply_to_id,
+      likes: note_likes,
       summary: note_summary || null,
       content: note_content
     })
@@ -49,6 +54,7 @@ function parseExtension(this: Repository, {
     repository: this,
     id,
     inReplyToId: note_in_reply_to_id,
+    likes: note_likes,
     summary: note_summary || null,
     content: note_content
   });
@@ -75,19 +81,37 @@ export default class {
     signal: AbortSignal,
     recover: (error: Error & { name: string }) => unknown
   ): Promise<Status[]> {
-    const { rows } = await this.pg.query({
-      name: 'selectRecentStatusesIncludingExtensionsByActorId',
-      text: 'SELECT statuses.*, announces.object_id AS announce_object_id, notes.in_reply_to_id AS note_in_reply_to_id, notes.summary AS note_summary, notes.content AS note_content FROM statuses LEFT OUTER JOIN announces USING (id) JOIN notes ON COALESCE(announces.object_id, statuses.id) = notes.id WHERE statuses.actor_id = $1 ORDER BY statuses.id DESC',
-      values: [actorId]
-    }, signal, error => error.name == 'AbortError' ? recover(error) : error);
+    try {
+      const { rows } = await this.pg.query({
+        name: 'selectRecentStatusesIncludingExtensionsByActorId',
+        text: 'SELECT statuses.*, announces.object_id AS announce_object_id, notes.in_reply_to_id AS note_in_reply_to_id, notes.likes AS note_likes, notes.summary AS note_summary, notes.content AS note_content FROM statuses LEFT OUTER JOIN announces USING (id) JOIN notes ON COALESCE(announces.object_id, statuses.id) = notes.id WHERE statuses.actor_id = $1 ORDER BY statuses.id DESC',
+        values: [actorId]
+      }, signal, error => {
+        if (error.code == '22P02') {
+          return invalidRepresentation;
+        }
 
-    return (rows as any[]).map(row => new Status({
-      repository: this,
-      id: row.id,
-      published: row.published,
-      actorId,
-      extension: parseExtension.call(this, row)
-    }));
+        if (error.name == 'AbortError') {
+          return recover(error);
+        }
+
+        return error;
+      });
+
+      return (rows as any[]).map(row => new Status({
+        repository: this,
+        id: row.id,
+        published: row.published,
+        actorId,
+        extension: parseExtension.call(this, row)
+      }));
+    } catch (error) {
+      if (error == invalidRepresentation) {
+        return [];
+      }
+
+      throw error;
+    }
   }
 
   async selectRecentStatusesIncludingExtensionsAndActorsFromInbox(
@@ -101,7 +125,7 @@ export default class {
 
     const { rows } = await this.pg.query({
       name: 'selectRecentStatusesIncludingExtensionsAndActorsFromInbox',
-      text: 'SELECT statuses.*, announces.object_id AS announce_object_id, notes.in_reply_to_id AS note_in_reply_to_id, notes.summary AS note_summary, notes.content AS note_content, actors.username AS actor_username, actors.host AS actor_host, actors.name AS actor_name, actors.summary AS actor_summary FROM statuses LEFT OUTER JOIN announces USING (id) JOIN notes ON COALESCE(announces.object_id, statuses.id) = notes.id JOIN actors ON statuses.actor_id = actors.id WHERE statuses.id = ANY($1)',
+      text: 'SELECT statuses.*, announces.object_id AS announce_object_id, notes.in_reply_to_id AS note_in_reply_to_id, notes.likes AS note_likes, notes.summary AS note_summary, notes.content AS note_content, actors.username AS actor_username, actors.host AS actor_host, actors.name AS actor_name, actors.summary AS actor_summary FROM statuses LEFT OUTER JOIN announces USING (id) JOIN notes ON COALESCE(announces.object_id, statuses.id) = notes.id JOIN actors ON statuses.actor_id = actors.id WHERE statuses.id = ANY($1)',
       values: [ids]
     }, signal, error => error.name == 'AbortError' ? recover(error) : error);
 
@@ -128,18 +152,36 @@ export default class {
     signal: AbortSignal,
     recover: (error: Error & { name: string }) => unknown
   ): Promise<Status | null> {
-    const { rows } = await this.pg.query({
-      name: 'selectStatusById',
-      text: 'SELECT actor_id FROM statuses WHERE id = $1',
-      values: [id]
-    }, signal, error => error.name == 'AbortError' ? recover(error) : error);
+    try {
+      const { rows } = await this.pg.query({
+        name: 'selectStatusById',
+        text: 'SELECT actor_id FROM statuses WHERE id = $1',
+        values: [id]
+      }, signal, error => {
+        if (error.code == '22P02') {
+          return invalidRepresentation;
+        }
 
-    return rows[0] ? new Status({
-      repository: this,
-      id,
-      published: rows[0].published,
-      actorId: rows[0].actor_id
-    }) : null;
+        if (error.name == 'AbortError') {
+          return recover(error);
+        }
+
+        return error;
+      });
+
+      return rows[0] ? new Status({
+        repository: this,
+        id,
+        published: rows[0].published,
+        actorId: rows[0].actor_id
+      }) : null;
+    } catch (error) {
+      if (error == invalidRepresentation) {
+        return null;
+      }
+
+      throw error;
+    }
   }
 
   async selectStatusIncludingExtensionById(
@@ -148,18 +190,36 @@ export default class {
     signal: AbortSignal,
     recover: (error: Error & { name: string }) => unknown
   ): Promise<Status | null> {
-    const { rows } = await this.pg.query({
-      name: 'selectStatusIncludingExtensionById',
-      text: 'SELECT statuses.*, announces.object_id AS announce_object_id, notes.summary AS note_summary, notes.content AS note_content FROM statuses LEFT OUTER JOIN announces USING (id) JOIN notes ON COALESCE(announces.object_id, statuses.id) = notes.id WHERE statuses.id = $1',
-      values: [id]
-    }, signal, error => error.name == 'AbortError' ? recover(error) : error);
+    try {
+      const { rows } = await this.pg.query({
+        name: 'selectStatusIncludingExtensionById',
+        text: 'SELECT statuses.*, announces.object_id AS announce_object_id, notes.in_reply_to_id AS note_in_reply_to_id, notes.likes AS note_likes, notes.summary AS note_summary, notes.content AS note_content FROM statuses LEFT OUTER JOIN announces USING (id) JOIN notes ON COALESCE(announces.object_id, statuses.id) = notes.id WHERE statuses.id = $1',
+        values: [id]
+      }, signal, error => {
+        if (error.code == '22P02') {
+          return invalidRepresentation;
+        }
 
-    return rows[0] ? new Status({
-      repository: this,
-      id,
-      published: rows[0].published,
-      actorId: rows[0].actor_id,
-      extension: parseExtension.call(this, rows[0])
-    }) : null;
+        if (error.name == 'AbortError') {
+          return recover(error);
+        }
+      
+        return error;
+      });
+
+      return rows[0] ? new Status({
+        repository: this,
+        id,
+        published: rows[0].published,
+        actorId: rows[0].actor_id,
+        extension: parseExtension.call(this, rows[0])
+      }) : null;
+    } catch (error) {
+      if (error == invalidRepresentation) {
+        return null;
+      }
+
+      throw error;
+    }
   }
 }

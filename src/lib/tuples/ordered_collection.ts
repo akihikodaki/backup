@@ -15,15 +15,21 @@
 */
 
 import { AbortSignal } from 'abort-controller';
-import { Any, OrderedCollection } from '../generated_activitystreams';
+import {
+  Any,
+  OrderedCollection,
+  StringifiableTo
+} from '../generated_activitystreams';
+import Actor from './actor';
 
 const recovery = {};
 
 interface ToActivityStreams {
   toActivityStreams(
     signal: AbortSignal,
-    recover: (error: Error) => unknown
-  ): Promise<Any>;
+    recover: (error: Error) => unknown,
+    actor?: Actor
+  ): Promise<StringifiableTo<Any>>;
 }
 
 export default class {
@@ -35,14 +41,16 @@ export default class {
 
   async toActivityStreams(
     signal: AbortSignal,
-    recover: (error: Error & { name: string }) => unknown
+    recover: (error: Error & { name: string }) => unknown,
+    actor?: Actor
   ): Promise<OrderedCollection> {
     return {
       type: 'OrderedCollection',
       orderedItems: (await Promise.all(this.orderedItems.map(
         item => item.toActivityStreams(
           signal,
-          error => error.name == 'AbortError' ? recover(error) : recovery
+          error => error.name == 'AbortError' ? recover(error) : recovery,
+          actor
         ).catch(error => {
           if (error != recovery) {
             throw error;

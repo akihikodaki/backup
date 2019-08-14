@@ -15,7 +15,10 @@
 */
 
 import { AbortController, AbortSignal } from 'abort-controller';
-import { Announce as ActivityStreams } from '../generated_activitystreams';
+import {
+  Announce as ActivityStreams,
+  StringifiableTo
+} from '../generated_activitystreams';
 import ParsedActivityStreams from '../parsed_activitystreams';
 import Repository from '../repository';
 import { postStatus, temporaryError } from '../transfer';
@@ -62,8 +65,9 @@ export default class Announce extends Relation<Properties, References> {
 
   async toActivityStreams(
     signal: AbortSignal,
-    recover: (error: Error & { name?: string }) => unknown
-  ): Promise<ActivityStreams> {
+    recover: (error: Error & { name?: string }) => unknown,
+    actor?: Actor
+  ): Promise<StringifiableTo<ActivityStreams>> {
     const [[id, published], object] = await Promise.all([
       this.select('status', signal, recover).then(status => {
         if (!status) {
@@ -80,12 +84,7 @@ export default class Announce extends Relation<Properties, References> {
           throw recover(new Error('object not found.'));
         }
 
-        const status = await object.select('status', signal, recover);
-        if (!status) {
-          throw recover(new Error('object\'s status not found.'));
-        }
-
-        return status.getUri(signal, recover);
+        return object.toActivityStreams(signal, recover, actor);
       }),
     ]);
 

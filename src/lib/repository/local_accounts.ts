@@ -17,7 +17,8 @@
 import { AbortSignal } from 'abort-controller';
 import {
   Announce as AnnounceActivityStreams,
-  Note as NoteActivityStreams
+  Note as NoteActivityStreams,
+  StringifiableTo as ActivityStreamsStringifiableTo
 } from '../generated_activitystreams';
 import Actor from '../tuples/actor';
 import LocalAccount, { Seed } from '../tuples/local_account';
@@ -83,6 +84,10 @@ export default class {
         return recover(error);
       }
 
+      if (error.code == '22021') {
+        return recover(error);
+      }
+
       if (error.code == '23505') {
         return recover(Object.assign(
           new Error('username conflicts.'),
@@ -112,7 +117,7 @@ export default class {
 
   async insertIntoInboxes(
     this: Repository,
-    accountOrActors: (LocalAccount | Actor)[],
+    actors: Actor[],
     item: Status,
     signal: AbortSignal,
     recover: (error: Error & { name?: string }) => unknown
@@ -127,29 +132,31 @@ export default class {
       throw recover(new Error('extension not found.'));
     }
 
-    const message: (AnnounceActivityStreams | NoteActivityStreams) & {
-      '@context'?: string;
-    } = await extension.toActivityStreams(signal, recover);
+    const messages = await Promise.all<
+      ActivityStreamsStringifiableTo<
+        AnnounceActivityStreams | NoteActivityStreams
+      > & { '@context'?: string }
+    >(actors.map(actor => extension.toActivityStreams(signal, recover, actor)));
 
-    message['@context'] = 'https://www.w3.org/ns/activitystreams';
-
-    const string = JSON.stringify(message);
-
-    return this.redis.client.pipeline(accountOrActors.map<string[]>(accountOrActor => [
+    return this.redis.client.pipeline(actors.map<string[]>(actor => [
       'zadd',
-      `${this.redis.prefix}inbox:${accountOrActor.id}`,
+      `${this.redis.prefix}inbox:${actor.id}`,
       id,
       id
-    ]).concat(accountOrActors.map(accountOrActor => [
+    ]).concat(actors.map(actor => [
       'zremrangebyrank',
-      `${this.redis.prefix}inbox:${accountOrActor.id}`,
+      `${this.redis.prefix}inbox:${actor.id}`,
       '0',
       '-4096'
-    ]), accountOrActors.map(accountOrActor => [
-      'publish',
-      this.getInboxChannel(accountOrActor),
-      string
-    ]))).exec();
+    ]), messages.map((message, index) => {
+      message['@context'] = 'https://www.w3.org/ns/activitystreams';
+
+      return [
+        'publish',
+        this.getInboxChannel(actors[index]),
+        JSON.stringify(message)
+      ];
+    }))).exec();
   }
 
   async selectLocalAccountByDigestOfCookie(

@@ -22,9 +22,15 @@ import Status from '../tuples/status';
 import URI from '../tuples/uri';
 import Repository, { conflict } from '.';
 
-function parse(this: Repository, { id, in_reply_to_id, summary, content }: {
+const invalidRepresentation = {};
+
+function parse(this: Repository, {
+  id, in_reply_to_id, likes, summary,
+  content
+}: {
   readonly id: string;
   readonly in_reply_to_id: string | null;
+  readonly likes: number;
   readonly summary: string;
   readonly content: string;
 }) {
@@ -32,6 +38,7 @@ function parse(this: Repository, { id, in_reply_to_id, summary, content }: {
     repository: this,
     id,
     inReplyToId: in_reply_to_id,
+    likes,
     summary: summary || null,
     content
   });
@@ -94,6 +101,7 @@ export default class {
         })
       }),
       inReplyToId: in_reply_to_id,
+      likes: 0,
       summary,
       content,
       attachments,
@@ -108,12 +116,30 @@ export default class {
     signal: AbortSignal,
     recover: (error: Error & { name: string }) => unknown
   ): Promise<Note | null> {
-    const { rows } = await this.pg.query({
-      name: 'selectNoteById',
-      text: 'SELECT * FROM notes WHERE id = $1',
-      values: [id]
-    }, signal, error => error.name == 'AbortError' ? recover(error) : error);
+    try {
+      const { rows } = await this.pg.query({
+        name: 'selectNoteById',
+        text: 'SELECT * FROM notes WHERE id = $1',
+        values: [id]
+      }, signal, error => {
+        if (error.code == '22P02') {
+          return invalidRepresentation;
+        }
 
-    return rows[0] ? parse.call(this, rows[0]) : null;
+        if (error.name == 'AbortError') {
+          return recover(error);
+        }
+
+        return error;
+      });
+
+      return rows[0] ? parse.call(this, rows[0]) : null;
+    } catch (error) {
+      if (error == invalidRepresentation) {
+        return null;
+      }
+
+      return error;
+    }
   }
 }
