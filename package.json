@@ -44,7 +44,7 @@
     "react-router": "^5.0.1",
     "react-router-dom": "^5.0.1",
     "redux": "^4.0.2",
-    "sanitize-html": "^1.20.1",
+    "sanitize-html": "^2.3.2",
     "sharp": "^0.22.1",
     "type-is": "^1.6.18"
   },
